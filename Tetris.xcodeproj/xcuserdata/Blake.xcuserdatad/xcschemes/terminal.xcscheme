@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "258ACF6B174354F50076F4BD"
-               BuildableName = "terminal"
+               BuildableName = "Terminal"
                BlueprintName = "Terminal"
                ReferencedContainer = "container:Tetris.xcodeproj">
             </BuildableReference>
@@ -33,7 +33,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "258ACF6B174354F50076F4BD"
-            BuildableName = "terminal"
+            BuildableName = "Terminal"
             BlueprintName = "Terminal"
             ReferencedContainer = "container:Tetris.xcodeproj">
          </BuildableReference>
@@ -55,7 +55,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "258ACF6B174354F50076F4BD"
-            BuildableName = "terminal"
+            BuildableName = "Terminal"
             BlueprintName = "Terminal"
             ReferencedContainer = "container:Tetris.xcodeproj">
          </BuildableReference>
@@ -79,7 +79,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "258ACF6B174354F50076F4BD"
-            BuildableName = "terminal"
+            BuildableName = "Terminal"
             BlueprintName = "Terminal"
             ReferencedContainer = "container:Tetris.xcodeproj">
          </BuildableReference>
