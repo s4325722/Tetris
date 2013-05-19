@@ -39,6 +39,7 @@
 		253070891748E1EA00188C7D /* project.lss */ = {isa = PBXFileReference; lastKnownFileType = text; name = project.lss; path = "../../Library/Developer/Xcode/DerivedData/Tetris-evaknpdpwndcqohhhobqqhpnzdit/Build/Products/Release/project.lss"; sourceTree = "<group>"; };
 		2530708A1748E1EA00188C7D /* project.map */ = {isa = PBXFileReference; lastKnownFileType = text; name = project.map; path = "../../Library/Developer/Xcode/DerivedData/Tetris-evaknpdpwndcqohhhobqqhpnzdit/Build/Products/Release/project.map"; sourceTree = "<group>"; };
 		2530708B1748E1EA00188C7D /* project.sym */ = {isa = PBXFileReference; lastKnownFileType = text; name = project.sym; path = "../../Library/Developer/Xcode/DerivedData/Tetris-evaknpdpwndcqohhhobqqhpnzdit/Build/Products/Release/project.sym"; sourceTree = "<group>"; };
+		2530708E1748EC3A00188C7D /* make-moss */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; path = "make-moss"; sourceTree = "<group>"; };
 		258ACF4917434C3D0076F4BD /* board.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = board.c; sourceTree = "<group>"; };
 		258ACF4A17434C3D0076F4BD /* board.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = board.h; sourceTree = "<group>"; };
 		258ACF4B17434C3D0076F4BD /* external_interrupt.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = external_interrupt.c; sourceTree = "<group>"; };
@@ -122,6 +123,7 @@
 		4079523B0CEA382200E202DC = {
 			isa = PBXGroup;
 			children = (
+				2530708E1748EC3A00188C7D /* make-moss */,
 				258ACF641743516D0076F4BD /* make-avr */,
 				258ACF4817434C3D0076F4BD /* src */,
 				2530708D1748E21300188C7D /* Products */,
