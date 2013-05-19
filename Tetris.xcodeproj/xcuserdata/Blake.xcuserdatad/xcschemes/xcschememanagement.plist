@@ -4,24 +4,29 @@
 <dict>
 	<key>SchemeUserState</key>
 	<dict>
+		<key>AVR.xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>1</integer>
+		</dict>
+		<key>Terminal.xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>2</integer>
+		</dict>
 		<key>Tetris.xcscheme</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>0</integer>
 		</dict>
-		<key>avr.xcscheme</key>
-		<dict>
-			<key>orderHint</key>
-			<integer>1</integer>
-		</dict>
-		<key>terminal.xcscheme</key>
-		<dict>
-			<key>orderHint</key>
-			<integer>2</integer>
-		</dict>
 	</dict>
 	<key>SuppressBuildableAutocreation</key>
 	<dict>
+		<key>253070771748CFDA00188C7D</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
 		<key>258ACF14174348A20076F4BD</key>
 		<dict>
 			<key>primary</key>
