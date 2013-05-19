@@ -14,13 +14,13 @@ OBJECTS = $(patsubst %.c, %.o, $(wildcard $(addprefix $(SRC)/, *.c)))
 HEADERS = $(wildcard $(addprefix $(SRC)/, *.h))
 
 %.o: %.c $(HEADERS)
-        $(CC) $(CFLAGS) -c $< -o $@
+    $(CC) $(CFLAGS) -c $< -o $@
 
 .PRECIOUS: $(TARGET) $(OBJECTS)
 
 $(TARGET): $(OBJECTS)
-        $(CC) $(OBJECTS) -Wall $(LIBS) -o $(addprefix $(BIN)/, $@)
+    $(CC) $(OBJECTS) -Wall $(LIBS) -o $(addprefix $(BIN)/, $@)
 
 clean:
-      	-rm -f *.o
-        -rm -f $(addprefix $(BIN)/, $(TARGET))
+    -rm -f *.o
+    -rm -f $(addprefix $(BIN)/, $(TARGET))
