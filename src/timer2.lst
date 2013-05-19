@@ -1,0 +1,329 @@
+   1               		.file	"timer2.c"
+   2               	__SREG__ = 0x3f
+   3               	__SP_H__ = 0x3e
+   4               	__SP_L__ = 0x3d
+   5               	__CCP__ = 0x34
+   6               	__tmp_reg__ = 0
+   7               	__zero_reg__ = 1
+   8               		.global __do_copy_data
+   9               		.global __do_clear_bss
+  10               		.text
+  11               	.Ltext0:
+  12               		.cfi_sections	.debug_frame
+  13               	.global	init_timer2
+  15               	init_timer2:
+  16               	.LFB0:
+  17               		.file 1 "timer2.c"
+   1:timer2.c      **** /* timer2.c
+   2:timer2.c      ****  *
+   3:timer2.c      ****  * Written by Peter Sutton.
+   4:timer2.c      ****  *
+   5:timer2.c      ****  * We setup timer2 to generate an interrupt every 1ms
+   6:timer2.c      ****  * We update a global clock tick variable - whose value
+   7:timer2.c      ****  * can be retrieved using the get_clock_ticks() function.
+   8:timer2.c      ****  */
+   9:timer2.c      **** 
+  10:timer2.c      **** #ifdef AVR
+  11:timer2.c      **** #include <avr/io.h>
+  12:timer2.c      **** #include <avr/interrupt.h>
+  13:timer2.c      **** #else
+  14:timer2.c      **** #include <sys/time.h>
+  15:timer2.c      **** #endif
+  16:timer2.c      **** 
+  17:timer2.c      **** #include "timer2.h"
+  18:timer2.c      **** 
+  19:timer2.c      **** /* Our internal clock tick count - incremented every 
+  20:timer2.c      ****  * millisecond. Will overflow every ~49 days. */
+  21:timer2.c      **** static volatile uint32_t clockTicks;
+  22:timer2.c      **** 
+  23:timer2.c      **** /* A pointer to our user-provided timer function that will
+  24:timer2.c      ****  * be called during every interrupt.
+  25:timer2.c      ****  */
+  26:timer2.c      **** static TIMER_FUNCTION *user_provided_timer_function;
+  27:timer2.c      **** 
+  28:timer2.c      **** /* Set up timer 2 to generate an interrupt every 1ms. 
+  29:timer2.c      ****  * We will divide the clock by 64 and count up to 124.
+  30:timer2.c      ****  * We will therefore get an interrupt every 64 x 125
+  31:timer2.c      ****  * clock cycles, i.e. every 1 milliseconds with an 8MHz
+  32:timer2.c      ****  * clock. 
+  33:timer2.c      ****  * The counter will be reset to 0 when it reaches it's
+  34:timer2.c      ****  * output compare value.
+  35:timer2.c      ****  */
+  36:timer2.c      **** void init_timer2(TIMER_FUNCTION* timer_func) {
+  18               		.loc 1 36 0
+  19               		.cfi_startproc
+  20               	.LVL0:
+  21               	/* prologue: function */
+  22               	/* frame size = 0 */
+  23               	/* stack size = 0 */
+  24               	.L__stack_usage = 0
+  37:timer2.c      **** 	/* Reset clock tick count. L indicates a long (32 bit) 
+  38:timer2.c      **** 	 * constant. 
+  39:timer2.c      **** 	 */
+  40:timer2.c      **** 	clockTicks = 0L;
+  25               		.loc 1 40 0
+  26 0000 1092 0000 		sts clockTicks,__zero_reg__
+  27 0004 1092 0000 		sts clockTicks+1,__zero_reg__
+  28 0008 1092 0000 		sts clockTicks+2,__zero_reg__
+  29 000c 1092 0000 		sts clockTicks+3,__zero_reg__
+  41:timer2.c      **** 	
+  42:timer2.c      **** 	/* Remember the user provider timer function */
+  43:timer2.c      **** 	user_provided_timer_function = timer_func;
+  30               		.loc 1 43 0
+  31 0010 9093 0000 		sts user_provided_timer_function+1,r25
+  32 0014 8093 0000 		sts user_provided_timer_function,r24
+  44:timer2.c      **** #ifdef AVR
+  45:timer2.c      **** 	/* Set the output compare value to be 124 */
+  46:timer2.c      **** 	OCR2 = 124;
+  33               		.loc 1 46 0
+  34 0018 8CE7      		ldi r24,lo8(124)
+  35               	.LVL1:
+  36 001a 83BD      		out 67-32,r24
+  47:timer2.c      **** 
+  48:timer2.c      **** 	/* Enable an interrupt on output compare match. 
+  49:timer2.c      **** 	 * Note that interrupts have to be enabled globally
+  50:timer2.c      **** 	 * before the interrupts will fire.
+  51:timer2.c      **** 	 */
+  52:timer2.c      **** 	TIMSK |= (1<<OCIE2);
+  37               		.loc 1 52 0
+  38 001c 87B7      		in r24,87-32
+  39 001e 8068      		ori r24,lo8(-128)
+  40 0020 87BF      		out 87-32,r24
+  53:timer2.c      **** 
+  54:timer2.c      **** 	/* Set the timer to clear on compare match (CTC mode)
+  55:timer2.c      **** 	 * and to divide the clock by 64. This starts the timer
+  56:timer2.c      **** 	 * running.
+  57:timer2.c      **** 	 */
+  58:timer2.c      **** 	TCCR2 = (1<<WGM21)|(0<<WGM20)|(0<<CS22)|(1<<CS21)|(1<<CS20);
+  41               		.loc 1 58 0
+  42 0022 8BE0      		ldi r24,lo8(11)
+  43 0024 85BD      		out 69-32,r24
+  44               	/* epilogue start */
+  59:timer2.c      **** #endif
+  60:timer2.c      **** }
+  45               		.loc 1 60 0
+  46 0026 0895      		ret
+  47               		.cfi_endproc
+  48               	.LFE0:
+  50               	.global	get_clock_ticks
+  52               	get_clock_ticks:
+  53               	.LFB1:
+  61:timer2.c      **** 
+  62:timer2.c      **** uint32_t get_clock_ticks(void) {
+  54               		.loc 1 62 0
+  55               		.cfi_startproc
+  56 0028 0F93      		push r16
+  57               	.LCFI0:
+  58               		.cfi_def_cfa_offset 3
+  59               		.cfi_offset 16, -2
+  60 002a 1F93      		push r17
+  61               	.LCFI1:
+  62               		.cfi_def_cfa_offset 4
+  63               		.cfi_offset 17, -3
+  64               	/* prologue: function */
+  65               	/* frame size = 0 */
+  66               	/* stack size = 2 */
+  67               	.L__stack_usage = 2
+  63:timer2.c      **** #ifdef AVR
+  64:timer2.c      **** 	uint32_t returnValue;
+  65:timer2.c      **** 
+  66:timer2.c      **** 	/* Disable interrupts so we can be sure that the interrupt
+  67:timer2.c      **** 	 * doesn't fire when we've copied just a couple of bytes
+  68:timer2.c      **** 	 * of the value. Interrupts are re-enabled if they were
+  69:timer2.c      **** 	 * enabled at the start.
+  70:timer2.c      **** 	 */
+  71:timer2.c      **** 	uint8_t interruptsOn = bit_is_set(SREG, SREG_I);
+  68               		.loc 1 71 0
+  69 002c 8FB7      		in r24,__SREG__
+  70               	.LVL2:
+  72:timer2.c      **** 	cli();
+  71               		.loc 1 72 0
+  72               	/* #APP */
+  73               	 ;  72 "timer2.c" 1
+  74 002e F894      		cli
+  75               	 ;  0 "" 2
+  73:timer2.c      **** 	returnValue = clockTicks;
+  76               		.loc 1 73 0
+  77               	/* #NOAPP */
+  78 0030 0091 0000 		lds r16,clockTicks
+  79 0034 1091 0000 		lds r17,clockTicks+1
+  80 0038 2091 0000 		lds r18,clockTicks+2
+  81 003c 3091 0000 		lds r19,clockTicks+3
+  82               	.LVL3:
+  74:timer2.c      **** 	if(interruptsOn) {
+  83               		.loc 1 74 0
+  84 0040 87FF      		sbrs r24,7
+  85 0042 00C0      		rjmp .L3
+  75:timer2.c      **** 		sei();
+  86               		.loc 1 75 0
+  87               	/* #APP */
+  88               	 ;  75 "timer2.c" 1
+  89 0044 7894      		sei
+  90               	 ;  0 "" 2
+  91               	/* #NOAPP */
+  92               	.L3:
+  76:timer2.c      **** 	}
+  77:timer2.c      **** 	return returnValue;
+  78:timer2.c      **** #else
+  79:timer2.c      **** /* Non AVR - we just get the current of day and turn it in 
+  80:timer2.c      ****  * to milliseconds. Problems may happen if this overflows
+  81:timer2.c      ****  * during the course of program execution. We ignore this.
+  82:timer2.c      ****  */
+  83:timer2.c      **** 	struct timeval t;
+  84:timer2.c      **** 	gettimeofday(&t, 0);
+  85:timer2.c      **** 	return (uint32_t)(t.tv_sec * 1000 + t.tv_usec / 1000);
+  86:timer2.c      **** #endif
+  87:timer2.c      **** }
+  93               		.loc 1 87 0
+  94 0046 B801      		movw r22,r16
+  95 0048 C901      		movw r24,r18
+  96               	.LVL4:
+  97               	/* epilogue start */
+  98 004a 1F91      		pop r17
+  99 004c 0F91      		pop r16
+ 100               	.LVL5:
+ 101 004e 0895      		ret
+ 102               		.cfi_endproc
+ 103               	.LFE1:
+ 105               	.global	__vector_9
+ 107               	__vector_9:
+ 108               	.LFB2:
+  88:timer2.c      **** 
+  89:timer2.c      **** #ifdef AVR
+  90:timer2.c      **** ISR(TIMER2_COMP_vect) {
+ 109               		.loc 1 90 0
+ 110               		.cfi_startproc
+ 111 0050 1F92      		push r1
+ 112               	.LCFI2:
+ 113               		.cfi_def_cfa_offset 3
+ 114               		.cfi_offset 1, -2
+ 115 0052 0F92      		push r0
+ 116               	.LCFI3:
+ 117               		.cfi_def_cfa_offset 4
+ 118               		.cfi_offset 0, -3
+ 119 0054 0FB6      		in r0,__SREG__
+ 120 0056 0F92      		push r0
+ 121 0058 1124      		clr __zero_reg__
+ 122 005a 2F93      		push r18
+ 123               	.LCFI4:
+ 124               		.cfi_def_cfa_offset 5
+ 125               		.cfi_offset 18, -4
+ 126 005c 3F93      		push r19
+ 127               	.LCFI5:
+ 128               		.cfi_def_cfa_offset 6
+ 129               		.cfi_offset 19, -5
+ 130 005e 4F93      		push r20
+ 131               	.LCFI6:
+ 132               		.cfi_def_cfa_offset 7
+ 133               		.cfi_offset 20, -6
+ 134 0060 5F93      		push r21
+ 135               	.LCFI7:
+ 136               		.cfi_def_cfa_offset 8
+ 137               		.cfi_offset 21, -7
+ 138 0062 6F93      		push r22
+ 139               	.LCFI8:
+ 140               		.cfi_def_cfa_offset 9
+ 141               		.cfi_offset 22, -8
+ 142 0064 7F93      		push r23
+ 143               	.LCFI9:
+ 144               		.cfi_def_cfa_offset 10
+ 145               		.cfi_offset 23, -9
+ 146 0066 8F93      		push r24
+ 147               	.LCFI10:
+ 148               		.cfi_def_cfa_offset 11
+ 149               		.cfi_offset 24, -10
+ 150 0068 9F93      		push r25
+ 151               	.LCFI11:
+ 152               		.cfi_def_cfa_offset 12
+ 153               		.cfi_offset 25, -11
+ 154 006a AF93      		push r26
+ 155               	.LCFI12:
+ 156               		.cfi_def_cfa_offset 13
+ 157               		.cfi_offset 26, -12
+ 158 006c BF93      		push r27
+ 159               	.LCFI13:
+ 160               		.cfi_def_cfa_offset 14
+ 161               		.cfi_offset 27, -13
+ 162 006e EF93      		push r30
+ 163               	.LCFI14:
+ 164               		.cfi_def_cfa_offset 15
+ 165               		.cfi_offset 30, -14
+ 166 0070 FF93      		push r31
+ 167               	.LCFI15:
+ 168               		.cfi_def_cfa_offset 16
+ 169               		.cfi_offset 31, -15
+ 170               	/* prologue: Signal */
+ 171               	/* frame size = 0 */
+ 172               	/* stack size = 15 */
+ 173               	.L__stack_usage = 15
+  91:timer2.c      **** 	/* Increment our clock tick count */
+  92:timer2.c      **** 	clockTicks++;
+ 174               		.loc 1 92 0
+ 175 0072 8091 0000 		lds r24,clockTicks
+ 176 0076 9091 0000 		lds r25,clockTicks+1
+ 177 007a A091 0000 		lds r26,clockTicks+2
+ 178 007e B091 0000 		lds r27,clockTicks+3
+ 179 0082 0196      		adiw r24,1
+ 180 0084 A11D      		adc r26,__zero_reg__
+ 181 0086 B11D      		adc r27,__zero_reg__
+ 182 0088 8093 0000 		sts clockTicks,r24
+ 183 008c 9093 0000 		sts clockTicks+1,r25
+ 184 0090 A093 0000 		sts clockTicks+2,r26
+ 185 0094 B093 0000 		sts clockTicks+3,r27
+  93:timer2.c      **** 	
+  94:timer2.c      **** 	/* If we have a user provided timer function, call it now */
+  95:timer2.c      **** 	if(user_provided_timer_function) {
+ 186               		.loc 1 95 0
+ 187 0098 E091 0000 		lds r30,user_provided_timer_function
+ 188 009c F091 0000 		lds r31,user_provided_timer_function+1
+ 189 00a0 3097      		sbiw r30,0
+ 190 00a2 01F0      		breq .L4
+  96:timer2.c      **** 		user_provided_timer_function();
+ 191               		.loc 1 96 0
+ 192 00a4 0995      		icall
+ 193               	.L4:
+ 194               	/* epilogue start */
+  97:timer2.c      **** 	}
+  98:timer2.c      **** }
+ 195               		.loc 1 98 0
+ 196 00a6 FF91      		pop r31
+ 197 00a8 EF91      		pop r30
+ 198 00aa BF91      		pop r27
+ 199 00ac AF91      		pop r26
+ 200 00ae 9F91      		pop r25
+ 201 00b0 8F91      		pop r24
+ 202 00b2 7F91      		pop r23
+ 203 00b4 6F91      		pop r22
+ 204 00b6 5F91      		pop r21
+ 205 00b8 4F91      		pop r20
+ 206 00ba 3F91      		pop r19
+ 207 00bc 2F91      		pop r18
+ 208 00be 0F90      		pop r0
+ 209 00c0 0FBE      		out __SREG__,r0
+ 210 00c2 0F90      		pop r0
+ 211 00c4 1F90      		pop r1
+ 212 00c6 1895      		reti
+ 213               		.cfi_endproc
+ 214               	.LFE2:
+ 216               		.lcomm clockTicks,4
+ 217               		.lcomm user_provided_timer_function,2
+ 218               	.Letext0:
+ 219               		.file 2 "/usr/local/CrossPack-AVR-20130212/lib/gcc/avr/4.6.2/../../../../avr/include/stdint.h"
+ 220               		.file 3 "timer2.h"
+DEFINED SYMBOLS
+                            *ABS*:00000000 timer2.c
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccm99QES.s:2      *ABS*:0000003f __SREG__
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccm99QES.s:3      *ABS*:0000003e __SP_H__
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccm99QES.s:4      *ABS*:0000003d __SP_L__
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccm99QES.s:5      *ABS*:00000034 __CCP__
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccm99QES.s:6      *ABS*:00000000 __tmp_reg__
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccm99QES.s:7      *ABS*:00000001 __zero_reg__
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccm99QES.s:15     .text:00000000 init_timer2
+                             .bss:00000000 clockTicks
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccm99QES.s:216    .bss:00000004 user_provided_timer_function
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccm99QES.s:52     .text:00000028 get_clock_ticks
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccm99QES.s:107    .text:00000050 __vector_9
+
+UNDEFINED SYMBOLS
+__do_copy_data
+__do_clear_bss

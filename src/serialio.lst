@@ -1,0 +1,988 @@
+   1               		.file	"serialio.c"
+   2               	__SREG__ = 0x3f
+   3               	__SP_H__ = 0x3e
+   4               	__SP_L__ = 0x3d
+   5               	__CCP__ = 0x34
+   6               	__tmp_reg__ = 0
+   7               	__zero_reg__ = 1
+   8               		.global __do_copy_data
+   9               		.global __do_clear_bss
+  10               		.text
+  11               	.Ltext0:
+  12               		.cfi_sections	.debug_frame
+  14               	uart_put_char:
+  15               	.LFB4:
+  16               		.file 1 "serialio.c"
+   1:serialio.c    **** /*
+   2:serialio.c    ****  * FILE: serialio.c
+   3:serialio.c    ****  *
+   4:serialio.c    ****  * Written by Peter Sutton.
+   5:serialio.c    ****  * 
+   6:serialio.c    ****  * Module to allow standard input/output routines to be used via 
+   7:serialio.c    ****  * serial port 0. The init_serial_stdio() method must be called before
+   8:serialio.c    ****  * any standard IO methods (e.g. printf). We use interrupt-based output
+   9:serialio.c    ****  * and a circular buffer to store output messages. (This allows us 
+  10:serialio.c    ****  * to print many characters at once to the buffer and have them 
+  11:serialio.c    ****  * output by the UART as speed permits.) If the buffer fills up, the
+  12:serialio.c    ****  * put method will either
+  13:serialio.c    ****  * (1) if interrupts are enabled, block until there is room in it, or
+  14:serialio.c    ****  * (2) if interrupts are disabled, will discard the character.
+  15:serialio.c    ****  * Input is blocking - requesting input from stdin will block
+  16:serialio.c    ****  * until a character is available. If interrupts are disabled when 
+  17:serialio.c    ****  * input is sought, then this will block forever.
+  18:serialio.c    ****  * The function input_available() can be used to test whether there is
+  19:serialio.c    ****  * input available to read from stdin.
+  20:serialio.c    ****  *
+  21:serialio.c    ****  */
+  22:serialio.c    **** 
+  23:serialio.c    **** #include <stdio.h>
+  24:serialio.c    **** #include <stdint.h>
+  25:serialio.c    **** 
+  26:serialio.c    **** #ifndef AVR
+  27:serialio.c    **** #include <sys/time.h>
+  28:serialio.c    **** #include <unistd.h>
+  29:serialio.c    **** #include <termios.h>
+  30:serialio.c    **** #else
+  31:serialio.c    **** #include <avr/io.h>
+  32:serialio.c    **** #include <avr/interrupt.h>
+  33:serialio.c    **** 
+  34:serialio.c    **** /* Clock rate in Hz */
+  35:serialio.c    **** #define SYSCLK 8000000L
+  36:serialio.c    **** 
+  37:serialio.c    **** /* Global variables */
+  38:serialio.c    **** /* Circular buffer to hold outgoing characters. The insert_pos variable
+  39:serialio.c    ****  * keeps track of the position (0 to OUTPUT_BUFFER_SIZE-1) that the next
+  40:serialio.c    ****  * outgoing character should be written to. bytes_in_buffer keeps
+  41:serialio.c    ****  * count of the number of characters currently stored in the buffer 
+  42:serialio.c    ****  * (ranging from 0 to OUTPUT_BUFFER_SIZE). This number of bytes immediately
+  43:serialio.c    ****  * prior to the current insert_pos are the bytes waiting to be output.
+  44:serialio.c    ****  * If the insert_pos reaches the end of the buffer it will wrap around
+  45:serialio.c    ****  * to the beginning (assuming those bytes have been output).
+  46:serialio.c    ****  * NOTE - OUTPUT_BUFFER_SIZE can not be larger than 255 without changing
+  47:serialio.c    ****  * the type of the variables below.
+  48:serialio.c    ****  */
+  49:serialio.c    **** #define OUTPUT_BUFFER_SIZE 255
+  50:serialio.c    **** volatile char out_buffer[OUTPUT_BUFFER_SIZE];
+  51:serialio.c    **** volatile uint8_t out_insert_pos;
+  52:serialio.c    **** volatile uint8_t bytes_in_out_buffer;
+  53:serialio.c    **** 
+  54:serialio.c    **** /* Circular buffer to hold incoming characters. Works on same principle
+  55:serialio.c    ****  * as output buffer
+  56:serialio.c    ****  */
+  57:serialio.c    **** #define INPUT_BUFFER_SIZE 16
+  58:serialio.c    **** volatile char input_buffer[INPUT_BUFFER_SIZE];
+  59:serialio.c    **** volatile uint8_t input_insert_pos;
+  60:serialio.c    **** volatile uint8_t bytes_in_input_buffer;
+  61:serialio.c    **** volatile uint8_t input_overrun;
+  62:serialio.c    **** 
+  63:serialio.c    **** /* Variable to keep track of whether incoming characters are to be echoed
+  64:serialio.c    ****  * back or not.
+  65:serialio.c    ****  */
+  66:serialio.c    **** static int8_t do_echo;
+  67:serialio.c    **** 
+  68:serialio.c    **** /* Function prototypes 
+  69:serialio.c    ****  */
+  70:serialio.c    **** void init_serial_stdio(long baudrate, int8_t echo);
+  71:serialio.c    **** static int uart_put_char(char, FILE*);
+  72:serialio.c    **** static int uart_get_char(FILE*);
+  73:serialio.c    **** 
+  74:serialio.c    **** /* Setup a stream that uses the uart get and put functions. We will
+  75:serialio.c    ****  * make standard input and output use this stream below.
+  76:serialio.c    ****  */
+  77:serialio.c    **** static FILE myStream = FDEV_SETUP_STREAM(uart_put_char, uart_get_char,
+  78:serialio.c    **** 		_FDEV_SETUP_RW);
+  79:serialio.c    **** #endif
+  80:serialio.c    **** 
+  81:serialio.c    **** void init_serial_stdio(long baudrate, int8_t echo) {
+  82:serialio.c    **** #ifdef AVR
+  83:serialio.c    **** 	uint16_t ubrr;
+  84:serialio.c    **** 	/*
+  85:serialio.c    **** 	 * Initialise our buffers
+  86:serialio.c    **** 	*/
+  87:serialio.c    **** 	out_insert_pos = 0;
+  88:serialio.c    **** 	bytes_in_out_buffer = 0;
+  89:serialio.c    **** 	input_insert_pos = 0;
+  90:serialio.c    **** 	bytes_in_input_buffer = 0;
+  91:serialio.c    **** 	input_overrun = 0;
+  92:serialio.c    **** 	
+  93:serialio.c    **** 	/*
+  94:serialio.c    **** 	 * Record whether we're going to echo characters or not
+  95:serialio.c    **** 	*/
+  96:serialio.c    **** 	do_echo = echo;
+  97:serialio.c    **** 	
+  98:serialio.c    **** 	/* Configure the serial port baud rate */
+  99:serialio.c    **** 	/* (This differs from the datasheet formula so that we get 
+ 100:serialio.c    **** 	 * rounding to the nearest integer while using integer division
+ 101:serialio.c    **** 	 * (which truncates)).
+ 102:serialio.c    **** 	*/
+ 103:serialio.c    **** 	ubrr = ((SYSCLK / (8 * baudrate)) + 1)/2 - 1;
+ 104:serialio.c    **** 	UBRR0H = ubrr >> 8;
+ 105:serialio.c    **** 	UBRR0L = ubrr & 0xFF;
+ 106:serialio.c    **** 	
+ 107:serialio.c    **** 	/*
+ 108:serialio.c    **** 	 * Enable transmission and receiving via UART. We don't enable
+ 109:serialio.c    **** 	 * the UDR empty interrupt here (we wait until we've got a
+ 110:serialio.c    **** 	 * character to transmit).
+ 111:serialio.c    **** 	 * NOTE: Interrupts must be enabled globally for this
+ 112:serialio.c    **** 	 * library to work, but we do not do this here.
+ 113:serialio.c    **** 	*/
+ 114:serialio.c    **** 	UCSR0B = (1<<RXEN0)|(1<<TXEN0);
+ 115:serialio.c    **** 	
+ 116:serialio.c    **** 	/*
+ 117:serialio.c    **** 	 * Enable receive complete interrupt 
+ 118:serialio.c    **** 	*/
+ 119:serialio.c    **** 	UCSR0B  |= (1 <<RXCIE0);
+ 120:serialio.c    **** 
+ 121:serialio.c    **** 	/* Set up our stream so the put and get functions below are used 
+ 122:serialio.c    **** 	 * to write/read characters via the serial port when we use
+ 123:serialio.c    **** 	 * stdio functions
+ 124:serialio.c    **** 	*/
+ 125:serialio.c    **** 	stdout = &myStream;
+ 126:serialio.c    **** 	stdin = &myStream;
+ 127:serialio.c    **** #else
+ 128:serialio.c    **** 	/* NON AVR
+ 129:serialio.c    **** 	 * We turn off echo, ignore carriage returns and disable
+ 130:serialio.c    **** 	 * canonical mode so characters can be processed one at a time
+ 131:serialio.c    **** 	 * - not a whole line at a time.
+ 132:serialio.c    **** 	 * We also make stdin and stdout non buffered.
+ 133:serialio.c    **** 	 */
+ 134:serialio.c    **** 	struct termios tty;
+ 135:serialio.c    **** 	tcgetattr(0, &tty);
+ 136:serialio.c    **** 	tty.c_iflag &= ~(IGNCR);
+ 137:serialio.c    **** 	tty.c_lflag &= ~(ECHO | ECHONL | ICANON);
+ 138:serialio.c    **** 	tcsetattr(0, 0, &tty);
+ 139:serialio.c    **** 	setvbuf(stdin, NULL, _IONBF, 0);
+ 140:serialio.c    **** 	setvbuf(stdout, NULL, _IONBF, 0);
+ 141:serialio.c    **** #endif
+ 142:serialio.c    **** }
+ 143:serialio.c    **** 
+ 144:serialio.c    **** int8_t serial_input_available(void) {
+ 145:serialio.c    **** #ifdef AVR
+ 146:serialio.c    **** 	return (bytes_in_input_buffer != 0);
+ 147:serialio.c    **** #else
+ 148:serialio.c    **** 	/* Non AVR - check if any bytes can be read from stdin (fd 0) */
+ 149:serialio.c    **** 	struct timeval timeout;
+ 150:serialio.c    **** 	fd_set fds;
+ 151:serialio.c    **** 	timeout.tv_sec = 0;
+ 152:serialio.c    **** 	timeout.tv_usec = 0;
+ 153:serialio.c    **** 	FD_ZERO(&fds);
+ 154:serialio.c    **** 	FD_SET(0, &fds);
+ 155:serialio.c    **** 	select(1, &fds, NULL, NULL, &timeout);
+ 156:serialio.c    **** 	return (FD_ISSET(0, &fds));
+ 157:serialio.c    **** #endif
+ 158:serialio.c    **** }
+ 159:serialio.c    **** 
+ 160:serialio.c    **** void clear_serial_input_buffer(void) {
+ 161:serialio.c    **** #ifdef AVR
+ 162:serialio.c    **** 	/* Just adjust our buffer data so it looks empty */
+ 163:serialio.c    **** 	input_insert_pos = 0;
+ 164:serialio.c    **** 	bytes_in_input_buffer = 0;
+ 165:serialio.c    **** #else 
+ 166:serialio.c    **** 	/* Non AVR */
+ 167:serialio.c    **** 	while(serial_input_available()) {
+ 168:serialio.c    **** 		/* Characters available - read and discard */
+ 169:serialio.c    **** 		(void)fgetc(stdin);
+ 170:serialio.c    **** 	}
+ 171:serialio.c    **** #endif
+ 172:serialio.c    **** }
+ 173:serialio.c    **** 
+ 174:serialio.c    **** #ifdef AVR
+ 175:serialio.c    **** static int uart_put_char(char c, FILE* stream) {
+  17               		.loc 1 175 0
+  18               		.cfi_startproc
+  19               	.LVL0:
+  20 0000 CF93      		push r28
+  21               	.LCFI0:
+  22               		.cfi_def_cfa_offset 3
+  23               		.cfi_offset 28, -2
+  24               	/* prologue: function */
+  25               	/* frame size = 0 */
+  26               	/* stack size = 1 */
+  27               	.L__stack_usage = 1
+  28 0002 C82F      		mov r28,r24
+ 176:serialio.c    **** 	uint8_t interrupts_enabled;
+ 177:serialio.c    **** 	
+ 178:serialio.c    **** 	/* Add the character to the buffer for transmission (if there 
+ 179:serialio.c    **** 	 * is space to do so). If not we wait until the buffer has space.
+ 180:serialio.c    **** 	 * If the character is \n, we output \r (carriage return)
+ 181:serialio.c    **** 	 * also.
+ 182:serialio.c    **** 	*/
+ 183:serialio.c    **** 	if(c == '\n') {
+  29               		.loc 1 183 0
+  30 0004 8A30      		cpi r24,lo8(10)
+  31 0006 01F4      		brne .L2
+ 184:serialio.c    **** 		uart_put_char('\r', stream);
+  32               		.loc 1 184 0
+  33 0008 8DE0      		ldi r24,lo8(13)
+  34               	.LVL1:
+  35 000a 0E94 0000 		call uart_put_char
+  36               	.LVL2:
+  37               	.L2:
+ 185:serialio.c    **** 	}
+ 186:serialio.c    **** 	
+ 187:serialio.c    **** 	/* If the buffer is full and interrupts are disabled then we
+ 188:serialio.c    **** 	 * abort - we don't output the character since the buffer will
+ 189:serialio.c    **** 	 * never be emptied if interrupts are disabled. If the buffer is full
+ 190:serialio.c    **** 	 * and interrupts are enabled then we loop until the buffer has 
+ 191:serialio.c    **** 	 * enough space. The bytes_in_buffer variable will get modified by the
+ 192:serialio.c    **** 	 * ISR which extracts bytes from the buffer.
+ 193:serialio.c    **** 	*/
+ 194:serialio.c    **** 	interrupts_enabled = bit_is_set(SREG, SREG_I);
+  38               		.loc 1 194 0
+  39 000e 8FB7      		in r24,__SREG__
+  40 0010 8078      		andi r24,lo8(-128)
+  41               	.LVL3:
+ 195:serialio.c    **** 	while(bytes_in_out_buffer >= OUTPUT_BUFFER_SIZE) {
+  42               		.loc 1 195 0
+  43 0012 00C0      		rjmp .L3
+  44               	.L5:
+ 196:serialio.c    **** 		if(!interrupts_enabled) {
+  45               		.loc 1 196 0
+  46 0014 8823      		tst r24
+  47 0016 01F0      		breq .L7
+  48               	.L3:
+ 195:serialio.c    **** 	while(bytes_in_out_buffer >= OUTPUT_BUFFER_SIZE) {
+  49               		.loc 1 195 0 discriminator 1
+  50 0018 9091 0000 		lds r25,bytes_in_out_buffer
+  51 001c 9F3F      		cpi r25,lo8(-1)
+  52 001e 01F0      		breq .L5
+ 197:serialio.c    **** 			return 1;
+ 198:serialio.c    **** 		}		
+ 199:serialio.c    **** 		/* else do nothing */
+ 200:serialio.c    **** 	}
+ 201:serialio.c    **** 	
+ 202:serialio.c    **** 	/* Add the character to the buffer for transmission if there
+ 203:serialio.c    **** 	 * is space to do so. We advance the insert_pos to the next
+ 204:serialio.c    **** 	 * character position. If this is beyond the end of the buffer
+ 205:serialio.c    **** 	 * we wrap around back to the beginning of the buffer 
+ 206:serialio.c    **** 	 * NOTE: we disable interrupts before modifying the buffer. This
+ 207:serialio.c    **** 	 * prevents the ISR from modifying the buffer at the same time.
+ 208:serialio.c    **** 	 * We reenable them if they were enabled when we entered the
+ 209:serialio.c    **** 	 * function.
+ 210:serialio.c    **** 	*/	
+ 211:serialio.c    **** 	cli();
+  53               		.loc 1 211 0
+  54               	/* #APP */
+  55               	 ;  211 "serialio.c" 1
+  56 0020 F894      		cli
+  57               	 ;  0 "" 2
+ 212:serialio.c    **** 	out_buffer[out_insert_pos++] = c;
+  58               		.loc 1 212 0
+  59               	/* #NOAPP */
+  60 0022 9091 0000 		lds r25,out_insert_pos
+  61 0026 E92F      		mov r30,r25
+  62 0028 F0E0      		ldi r31,lo8(0)
+  63 002a E050      		subi r30,lo8(-(out_buffer))
+  64 002c F040      		sbci r31,hi8(-(out_buffer))
+  65 002e C083      		st Z,r28
+  66 0030 9F5F      		subi r25,lo8(-(1))
+  67 0032 9093 0000 		sts out_insert_pos,r25
+ 213:serialio.c    **** 	bytes_in_out_buffer++;
+  68               		.loc 1 213 0
+  69 0036 9091 0000 		lds r25,bytes_in_out_buffer
+  70 003a 9F5F      		subi r25,lo8(-(1))
+  71 003c 9093 0000 		sts bytes_in_out_buffer,r25
+ 214:serialio.c    **** 	if(out_insert_pos == OUTPUT_BUFFER_SIZE) {
+  72               		.loc 1 214 0
+  73 0040 9091 0000 		lds r25,out_insert_pos
+  74 0044 9F3F      		cpi r25,lo8(-1)
+  75 0046 01F4      		brne .L6
+ 215:serialio.c    **** 		/* Wrap around buffer pointer if necessary */
+ 216:serialio.c    **** 		out_insert_pos = 0;
+  76               		.loc 1 216 0
+  77 0048 1092 0000 		sts out_insert_pos,__zero_reg__
+  78               	.L6:
+ 217:serialio.c    **** 	}
+ 218:serialio.c    **** 	/* Reenable interrupts (UDR Empty interrupt may have been
+ 219:serialio.c    **** 	 * disabled) */
+ 220:serialio.c    **** 	UCSR0B |= (1 << UDRIE0);
+  79               		.loc 1 220 0
+  80 004c 559A      		sbi 42-32,5
+ 221:serialio.c    **** 	if(interrupts_enabled) {
+  81               		.loc 1 221 0
+  82 004e 8823      		tst r24
+  83 0050 01F0      		breq .L8
+ 222:serialio.c    **** 		sei();
+  84               		.loc 1 222 0
+  85               	/* #APP */
+  86               	 ;  222 "serialio.c" 1
+  87 0052 7894      		sei
+  88               	 ;  0 "" 2
+  89               	/* #NOAPP */
+  90 0054 00C0      		rjmp .L8
+  91               	.L7:
+ 197:serialio.c    **** 			return 1;
+  92               		.loc 1 197 0
+  93 0056 81E0      		ldi r24,lo8(1)
+  94 0058 90E0      		ldi r25,hi8(1)
+  95               	.LVL4:
+  96 005a 00C0      		rjmp .L4
+  97               	.LVL5:
+  98               	.L8:
+ 223:serialio.c    **** 	}
+ 224:serialio.c    **** 	return 0;
+  99               		.loc 1 224 0
+ 100 005c 80E0      		ldi r24,lo8(0)
+ 101 005e 90E0      		ldi r25,hi8(0)
+ 102               	.LVL6:
+ 103               	.L4:
+ 104               	/* epilogue start */
+ 225:serialio.c    **** }
+ 105               		.loc 1 225 0
+ 106 0060 CF91      		pop r28
+ 107               	.LVL7:
+ 108 0062 0895      		ret
+ 109               		.cfi_endproc
+ 110               	.LFE4:
+ 113               	uart_get_char:
+ 114               	.LFB5:
+ 226:serialio.c    **** 
+ 227:serialio.c    **** int uart_get_char(FILE* stream) {
+ 115               		.loc 1 227 0
+ 116               		.cfi_startproc
+ 117               	/* prologue: function */
+ 118               	/* frame size = 0 */
+ 119               	/* stack size = 0 */
+ 120               	.L__stack_usage = 0
+ 121               	.L10:
+ 228:serialio.c    **** 	/* Wait until we've received a character */
+ 229:serialio.c    **** 	while(bytes_in_input_buffer == 0) {
+ 122               		.loc 1 229 0 discriminator 1
+ 123 0064 8091 0000 		lds r24,bytes_in_input_buffer
+ 124 0068 8823      		tst r24
+ 125 006a 01F0      		breq .L10
+ 230:serialio.c    **** 		/* do nothing */
+ 231:serialio.c    **** 	}
+ 232:serialio.c    **** 	
+ 233:serialio.c    **** 	/*
+ 234:serialio.c    **** 	 * Turn interrupts off and remove a character from the input
+ 235:serialio.c    **** 	 * buffer. We reenable interrupts if they were on.
+ 236:serialio.c    **** 	 * The pending character is the one which is byte_in_input_buffer
+ 237:serialio.c    **** 	 * characters before the insert position (taking into account
+ 238:serialio.c    **** 	 * that we may need to wrap around).
+ 239:serialio.c    **** 	 */
+ 240:serialio.c    **** 	uint8_t interrupts_enabled = bit_is_set(SREG, SREG_I);
+ 126               		.loc 1 240 0
+ 127 006c 2FB7      		in r18,__SREG__
+ 128 006e 2078      		andi r18,lo8(-128)
+ 129               	.LVL8:
+ 241:serialio.c    **** 	cli();
+ 130               		.loc 1 241 0
+ 131               	/* #APP */
+ 132               	 ;  241 "serialio.c" 1
+ 133 0070 F894      		cli
+ 134               	 ;  0 "" 2
+ 242:serialio.c    **** 	char c;
+ 243:serialio.c    **** 	if(input_insert_pos - bytes_in_input_buffer < 0) {
+ 135               		.loc 1 243 0
+ 136               	/* #NOAPP */
+ 137 0072 8091 0000 		lds r24,input_insert_pos
+ 138 0076 3091 0000 		lds r19,bytes_in_input_buffer
+ 139 007a 90E0      		ldi r25,lo8(0)
+ 140 007c 831B      		sub r24,r19
+ 141 007e 9109      		sbc r25,__zero_reg__
+ 244:serialio.c    **** 		/* Need to wrap around */
+ 245:serialio.c    **** 		c = input_buffer[input_insert_pos - bytes_in_input_buffer
+ 142               		.loc 1 245 0
+ 143 0080 E091 0000 		lds r30,input_insert_pos
+ 243:serialio.c    **** 	if(input_insert_pos - bytes_in_input_buffer < 0) {
+ 144               		.loc 1 243 0
+ 145 0084 97FF      		sbrs r25,7
+ 146 0086 00C0      		rjmp .L11
+ 147               		.loc 1 245 0
+ 148 0088 8091 0000 		lds r24,bytes_in_input_buffer
+ 149 008c F0E0      		ldi r31,lo8(0)
+ 150 008e E81B      		sub r30,r24
+ 151 0090 F109      		sbc r31,__zero_reg__
+ 152 0092 E050      		subi r30,lo8(-(input_buffer+16))
+ 153 0094 F040      		sbci r31,hi8(-(input_buffer+16))
+ 154 0096 00C0      		rjmp .L15
+ 155               	.L11:
+ 246:serialio.c    **** 				+ INPUT_BUFFER_SIZE];
+ 247:serialio.c    **** 	} else {
+ 248:serialio.c    **** 		c = input_buffer[input_insert_pos - bytes_in_input_buffer];
+ 156               		.loc 1 248 0
+ 157 0098 8091 0000 		lds r24,bytes_in_input_buffer
+ 158 009c F0E0      		ldi r31,lo8(0)
+ 159 009e E81B      		sub r30,r24
+ 160 00a0 F109      		sbc r31,__zero_reg__
+ 161 00a2 E050      		subi r30,lo8(-(input_buffer))
+ 162 00a4 F040      		sbci r31,hi8(-(input_buffer))
+ 163               	.L15:
+ 164 00a6 8081      		ld r24,Z
+ 165               	.LVL9:
+ 249:serialio.c    **** 	}
+ 250:serialio.c    **** 	
+ 251:serialio.c    **** 	/* Decrement our count of bytes in the input buffer */
+ 252:serialio.c    **** 	bytes_in_input_buffer--;
+ 166               		.loc 1 252 0
+ 167 00a8 9091 0000 		lds r25,bytes_in_input_buffer
+ 168 00ac 9150      		subi r25,lo8(-(-1))
+ 169 00ae 9093 0000 		sts bytes_in_input_buffer,r25
+ 253:serialio.c    **** 	if(interrupts_enabled) {
+ 170               		.loc 1 253 0
+ 171 00b2 2223      		tst r18
+ 172 00b4 01F0      		breq .L13
+ 254:serialio.c    **** 		sei();
+ 173               		.loc 1 254 0
+ 174               	/* #APP */
+ 175               	 ;  254 "serialio.c" 1
+ 176 00b6 7894      		sei
+ 177               	 ;  0 "" 2
+ 178               	/* #NOAPP */
+ 179               	.L13:
+ 255:serialio.c    **** 	}	
+ 256:serialio.c    **** 	return c;
+ 257:serialio.c    **** }
+ 180               		.loc 1 257 0
+ 181 00b8 90E0      		ldi r25,lo8(0)
+ 182               	/* epilogue start */
+ 183 00ba 0895      		ret
+ 184               		.cfi_endproc
+ 185               	.LFE5:
+ 187               	.global	init_serial_stdio
+ 189               	init_serial_stdio:
+ 190               	.LFB1:
+  81:serialio.c    **** void init_serial_stdio(long baudrate, int8_t echo) {
+ 191               		.loc 1 81 0
+ 192               		.cfi_startproc
+ 193               	.LVL10:
+ 194 00bc 0F93      		push r16
+ 195               	.LCFI1:
+ 196               		.cfi_def_cfa_offset 3
+ 197               		.cfi_offset 16, -2
+ 198 00be 1F93      		push r17
+ 199               	.LCFI2:
+ 200               		.cfi_def_cfa_offset 4
+ 201               		.cfi_offset 17, -3
+ 202               	/* prologue: function */
+ 203               	/* frame size = 0 */
+ 204               	/* stack size = 2 */
+ 205               	.L__stack_usage = 2
+ 206 00c0 8B01      		movw r16,r22
+ 207 00c2 9C01      		movw r18,r24
+  87:serialio.c    **** 	out_insert_pos = 0;
+ 208               		.loc 1 87 0
+ 209 00c4 1092 0000 		sts out_insert_pos,__zero_reg__
+  88:serialio.c    **** 	bytes_in_out_buffer = 0;
+ 210               		.loc 1 88 0
+ 211 00c8 1092 0000 		sts bytes_in_out_buffer,__zero_reg__
+  89:serialio.c    **** 	input_insert_pos = 0;
+ 212               		.loc 1 89 0
+ 213 00cc 1092 0000 		sts input_insert_pos,__zero_reg__
+  90:serialio.c    **** 	bytes_in_input_buffer = 0;
+ 214               		.loc 1 90 0
+ 215 00d0 1092 0000 		sts bytes_in_input_buffer,__zero_reg__
+  91:serialio.c    **** 	input_overrun = 0;
+ 216               		.loc 1 91 0
+ 217 00d4 1092 0000 		sts input_overrun,__zero_reg__
+  96:serialio.c    **** 	do_echo = echo;
+ 218               		.loc 1 96 0
+ 219 00d8 4093 0000 		sts do_echo,r20
+ 103:serialio.c    **** 	ubrr = ((SYSCLK / (8 * baudrate)) + 1)/2 - 1;
+ 220               		.loc 1 103 0
+ 221 00dc 43E0      		ldi r20,3
+ 222 00de 000F      	1:	lsl r16
+ 223 00e0 111F      		rol r17
+ 224 00e2 221F      		rol r18
+ 225 00e4 331F      		rol r19
+ 226 00e6 4A95      		dec r20
+ 227 00e8 01F4      		brne 1b
+ 228               	.LVL11:
+ 229 00ea 60E0      		ldi r22,lo8(8000000)
+ 230 00ec 72E1      		ldi r23,hi8(8000000)
+ 231 00ee 8AE7      		ldi r24,hlo8(8000000)
+ 232 00f0 90E0      		ldi r25,hhi8(8000000)
+ 233               	.LVL12:
+ 234 00f2 A901      		movw r20,r18
+ 235 00f4 9801      		movw r18,r16
+ 236 00f6 0E94 0000 		call __divmodsi4
+ 237 00fa 8901      		movw r16,r18
+ 238 00fc 9A01      		movw r18,r20
+ 239 00fe 0F5F      		subi r16,lo8(-(1))
+ 240 0100 1F4F      		sbci r17,hi8(-(1))
+ 241 0102 2F4F      		sbci r18,hlo8(-(1))
+ 242 0104 3F4F      		sbci r19,hhi8(-(1))
+ 243 0106 C901      		movw r24,r18
+ 244 0108 B801      		movw r22,r16
+ 245 010a 22E0      		ldi r18,lo8(2)
+ 246 010c 30E0      		ldi r19,hi8(2)
+ 247 010e 40E0      		ldi r20,hlo8(2)
+ 248 0110 50E0      		ldi r21,hhi8(2)
+ 249 0112 0E94 0000 		call __divmodsi4
+ 250 0116 2150      		subi r18,lo8(-(-1))
+ 251 0118 3040      		sbci r19,hi8(-(-1))
+ 252               	.LVL13:
+ 104:serialio.c    **** 	UBRR0H = ubrr >> 8;
+ 253               		.loc 1 104 0
+ 254 011a 3093 9000 		sts 144,r19
+ 105:serialio.c    **** 	UBRR0L = ubrr & 0xFF;
+ 255               		.loc 1 105 0
+ 256 011e 29B9      		out 41-32,r18
+ 114:serialio.c    **** 	UCSR0B = (1<<RXEN0)|(1<<TXEN0);
+ 257               		.loc 1 114 0
+ 258 0120 88E1      		ldi r24,lo8(24)
+ 259 0122 8AB9      		out 42-32,r24
+ 119:serialio.c    **** 	UCSR0B  |= (1 <<RXCIE0);
+ 260               		.loc 1 119 0
+ 261 0124 579A      		sbi 42-32,7
+ 125:serialio.c    **** 	stdout = &myStream;
+ 262               		.loc 1 125 0
+ 263 0126 80E0      		ldi r24,lo8(myStream)
+ 264 0128 90E0      		ldi r25,hi8(myStream)
+ 265 012a 9093 0000 		sts __iob+2+1,r25
+ 266 012e 8093 0000 		sts __iob+2,r24
+ 126:serialio.c    **** 	stdin = &myStream;
+ 267               		.loc 1 126 0
+ 268 0132 9093 0000 		sts __iob+1,r25
+ 269 0136 8093 0000 		sts __iob,r24
+ 270               	/* epilogue start */
+ 142:serialio.c    **** }
+ 271               		.loc 1 142 0
+ 272 013a 1F91      		pop r17
+ 273 013c 0F91      		pop r16
+ 274 013e 0895      		ret
+ 275               		.cfi_endproc
+ 276               	.LFE1:
+ 278               	.global	serial_input_available
+ 280               	serial_input_available:
+ 281               	.LFB2:
+ 144:serialio.c    **** int8_t serial_input_available(void) {
+ 282               		.loc 1 144 0
+ 283               		.cfi_startproc
+ 284               	/* prologue: function */
+ 285               	/* frame size = 0 */
+ 286               	/* stack size = 0 */
+ 287               	.L__stack_usage = 0
+ 146:serialio.c    **** 	return (bytes_in_input_buffer != 0);
+ 288               		.loc 1 146 0
+ 289 0140 9091 0000 		lds r25,bytes_in_input_buffer
+ 290 0144 81E0      		ldi r24,lo8(1)
+ 291 0146 9923      		tst r25
+ 292 0148 01F4      		brne .L18
+ 293 014a 80E0      		ldi r24,lo8(0)
+ 294               	.L18:
+ 158:serialio.c    **** }
+ 295               		.loc 1 158 0
+ 296 014c 0895      		ret
+ 297               		.cfi_endproc
+ 298               	.LFE2:
+ 300               	.global	clear_serial_input_buffer
+ 302               	clear_serial_input_buffer:
+ 303               	.LFB3:
+ 160:serialio.c    **** void clear_serial_input_buffer(void) {
+ 304               		.loc 1 160 0
+ 305               		.cfi_startproc
+ 306               	/* prologue: function */
+ 307               	/* frame size = 0 */
+ 308               	/* stack size = 0 */
+ 309               	.L__stack_usage = 0
+ 163:serialio.c    **** 	input_insert_pos = 0;
+ 310               		.loc 1 163 0
+ 311 014e 1092 0000 		sts input_insert_pos,__zero_reg__
+ 164:serialio.c    **** 	bytes_in_input_buffer = 0;
+ 312               		.loc 1 164 0
+ 313 0152 1092 0000 		sts bytes_in_input_buffer,__zero_reg__
+ 314               	/* epilogue start */
+ 172:serialio.c    **** }
+ 315               		.loc 1 172 0
+ 316 0156 0895      		ret
+ 317               		.cfi_endproc
+ 318               	.LFE3:
+ 320               	.global	__vector_19
+ 322               	__vector_19:
+ 323               	.LFB6:
+ 258:serialio.c    **** 
+ 259:serialio.c    **** /*
+ 260:serialio.c    ****  * Define the interrupt handler for UART Data Register Empty (i.e. 
+ 261:serialio.c    ****  * another character can be taken from our buffer and written out)
+ 262:serialio.c    ****  */
+ 263:serialio.c    **** ISR(USART0_UDRE_vect) 
+ 264:serialio.c    **** {
+ 324               		.loc 1 264 0
+ 325               		.cfi_startproc
+ 326 0158 1F92      		push r1
+ 327               	.LCFI3:
+ 328               		.cfi_def_cfa_offset 3
+ 329               		.cfi_offset 1, -2
+ 330 015a 0F92      		push r0
+ 331               	.LCFI4:
+ 332               		.cfi_def_cfa_offset 4
+ 333               		.cfi_offset 0, -3
+ 334 015c 0FB6      		in r0,__SREG__
+ 335 015e 0F92      		push r0
+ 336 0160 1124      		clr __zero_reg__
+ 337 0162 2F93      		push r18
+ 338               	.LCFI5:
+ 339               		.cfi_def_cfa_offset 5
+ 340               		.cfi_offset 18, -4
+ 341 0164 8F93      		push r24
+ 342               	.LCFI6:
+ 343               		.cfi_def_cfa_offset 6
+ 344               		.cfi_offset 24, -5
+ 345 0166 9F93      		push r25
+ 346               	.LCFI7:
+ 347               		.cfi_def_cfa_offset 7
+ 348               		.cfi_offset 25, -6
+ 349 0168 EF93      		push r30
+ 350               	.LCFI8:
+ 351               		.cfi_def_cfa_offset 8
+ 352               		.cfi_offset 30, -7
+ 353 016a FF93      		push r31
+ 354               	.LCFI9:
+ 355               		.cfi_def_cfa_offset 9
+ 356               		.cfi_offset 31, -8
+ 357               	/* prologue: Signal */
+ 358               	/* frame size = 0 */
+ 359               	/* stack size = 8 */
+ 360               	.L__stack_usage = 8
+ 265:serialio.c    **** 	/* Check if we have data in our buffer */
+ 266:serialio.c    **** 	if(bytes_in_out_buffer > 0) {
+ 361               		.loc 1 266 0
+ 362 016c 8091 0000 		lds r24,bytes_in_out_buffer
+ 363 0170 8823      		tst r24
+ 364 0172 01F0      		breq .L21
+ 365               	.LBB2:
+ 267:serialio.c    **** 		/* Yes we do - remove the pending byte and output it
+ 268:serialio.c    **** 		 * via the UART. The pending byte (character) is the
+ 269:serialio.c    **** 		 * one which is "bytes_in_buffer" characters before the 
+ 270:serialio.c    **** 		 * insert_pos (taking into account that we may 
+ 271:serialio.c    **** 		 * need to wrap around to the end of the buffer).
+ 272:serialio.c    **** 		 */
+ 273:serialio.c    **** 		char c;
+ 274:serialio.c    **** 		if(out_insert_pos - bytes_in_out_buffer < 0) {
+ 366               		.loc 1 274 0
+ 367 0174 8091 0000 		lds r24,out_insert_pos
+ 368 0178 2091 0000 		lds r18,bytes_in_out_buffer
+ 369 017c 90E0      		ldi r25,lo8(0)
+ 370 017e 821B      		sub r24,r18
+ 371 0180 9109      		sbc r25,__zero_reg__
+ 275:serialio.c    **** 			/* Need to wrap around */
+ 276:serialio.c    **** 			c = out_buffer[out_insert_pos - bytes_in_out_buffer
+ 372               		.loc 1 276 0
+ 373 0182 E091 0000 		lds r30,out_insert_pos
+ 274:serialio.c    **** 		if(out_insert_pos - bytes_in_out_buffer < 0) {
+ 374               		.loc 1 274 0
+ 375 0186 97FF      		sbrs r25,7
+ 376 0188 00C0      		rjmp .L22
+ 377               		.loc 1 276 0
+ 378 018a 8091 0000 		lds r24,bytes_in_out_buffer
+ 379 018e F0E0      		ldi r31,lo8(0)
+ 380 0190 E81B      		sub r30,r24
+ 381 0192 F109      		sbc r31,__zero_reg__
+ 382 0194 E050      		subi r30,lo8(-(out_buffer+255))
+ 383 0196 F040      		sbci r31,hi8(-(out_buffer+255))
+ 384 0198 00C0      		rjmp .L25
+ 385               	.L22:
+ 277:serialio.c    **** 				+ OUTPUT_BUFFER_SIZE];
+ 278:serialio.c    **** 		} else {
+ 279:serialio.c    **** 			c = out_buffer[out_insert_pos - bytes_in_out_buffer];
+ 386               		.loc 1 279 0
+ 387 019a 8091 0000 		lds r24,bytes_in_out_buffer
+ 388 019e F0E0      		ldi r31,lo8(0)
+ 389 01a0 E81B      		sub r30,r24
+ 390 01a2 F109      		sbc r31,__zero_reg__
+ 391 01a4 E050      		subi r30,lo8(-(out_buffer))
+ 392 01a6 F040      		sbci r31,hi8(-(out_buffer))
+ 393               	.L25:
+ 394 01a8 9081      		ld r25,Z
+ 395               	.LVL14:
+ 280:serialio.c    **** 		}
+ 281:serialio.c    **** 		/* Decrement our count of the number of bytes in the 
+ 282:serialio.c    **** 		 * buffer 
+ 283:serialio.c    **** 		 */
+ 284:serialio.c    **** 		bytes_in_out_buffer--;
+ 396               		.loc 1 284 0
+ 397 01aa 8091 0000 		lds r24,bytes_in_out_buffer
+ 398 01ae 8150      		subi r24,lo8(-(-1))
+ 399 01b0 8093 0000 		sts bytes_in_out_buffer,r24
+ 285:serialio.c    **** 		
+ 286:serialio.c    **** 		/* Output the character via the UART */
+ 287:serialio.c    **** 		UDR0 = c;
+ 400               		.loc 1 287 0
+ 401 01b4 9CB9      		out 44-32,r25
+ 402 01b6 00C0      		rjmp .L20
+ 403               	.LVL15:
+ 404               	.L21:
+ 405               	.LBE2:
+ 288:serialio.c    **** 	} else {
+ 289:serialio.c    **** 		/* No data in the buffer. We disable the UART Data
+ 290:serialio.c    **** 		 * Register Empty interrupt because otherwise it 
+ 291:serialio.c    **** 		 * will trigger again immediately this ISR exits. 
+ 292:serialio.c    **** 		 * The interrupt is reenabled when a character is
+ 293:serialio.c    **** 		 * placed in the buffer.
+ 294:serialio.c    **** 		 */
+ 295:serialio.c    **** 		UCSR0B &= ~(1<<UDRIE0);
+ 406               		.loc 1 295 0
+ 407 01b8 5598      		cbi 42-32,5
+ 408               	.L20:
+ 409               	/* epilogue start */
+ 296:serialio.c    **** 	}
+ 297:serialio.c    **** }
+ 410               		.loc 1 297 0
+ 411 01ba FF91      		pop r31
+ 412 01bc EF91      		pop r30
+ 413 01be 9F91      		pop r25
+ 414 01c0 8F91      		pop r24
+ 415 01c2 2F91      		pop r18
+ 416 01c4 0F90      		pop r0
+ 417 01c6 0FBE      		out __SREG__,r0
+ 418 01c8 0F90      		pop r0
+ 419 01ca 1F90      		pop r1
+ 420 01cc 1895      		reti
+ 421               		.cfi_endproc
+ 422               	.LFE6:
+ 424               	.global	__vector_18
+ 426               	__vector_18:
+ 427               	.LFB7:
+ 298:serialio.c    **** 
+ 299:serialio.c    **** /*
+ 300:serialio.c    ****  * Define the interrupt handler for UART Receive Complete (i.e. 
+ 301:serialio.c    ****  * we can read a character. The character is read and placed in
+ 302:serialio.c    ****  * the input buffer.
+ 303:serialio.c    ****  */
+ 304:serialio.c    **** 
+ 305:serialio.c    **** ISR(USART0_RX_vect) 
+ 306:serialio.c    **** {
+ 428               		.loc 1 306 0
+ 429               		.cfi_startproc
+ 430 01ce 1F92      		push r1
+ 431               	.LCFI10:
+ 432               		.cfi_def_cfa_offset 3
+ 433               		.cfi_offset 1, -2
+ 434 01d0 0F92      		push r0
+ 435               	.LCFI11:
+ 436               		.cfi_def_cfa_offset 4
+ 437               		.cfi_offset 0, -3
+ 438 01d2 0FB6      		in r0,__SREG__
+ 439 01d4 0F92      		push r0
+ 440 01d6 1124      		clr __zero_reg__
+ 441 01d8 2F93      		push r18
+ 442               	.LCFI12:
+ 443               		.cfi_def_cfa_offset 5
+ 444               		.cfi_offset 18, -4
+ 445 01da 3F93      		push r19
+ 446               	.LCFI13:
+ 447               		.cfi_def_cfa_offset 6
+ 448               		.cfi_offset 19, -5
+ 449 01dc 4F93      		push r20
+ 450               	.LCFI14:
+ 451               		.cfi_def_cfa_offset 7
+ 452               		.cfi_offset 20, -6
+ 453 01de 5F93      		push r21
+ 454               	.LCFI15:
+ 455               		.cfi_def_cfa_offset 8
+ 456               		.cfi_offset 21, -7
+ 457 01e0 6F93      		push r22
+ 458               	.LCFI16:
+ 459               		.cfi_def_cfa_offset 9
+ 460               		.cfi_offset 22, -8
+ 461 01e2 7F93      		push r23
+ 462               	.LCFI17:
+ 463               		.cfi_def_cfa_offset 10
+ 464               		.cfi_offset 23, -9
+ 465 01e4 8F93      		push r24
+ 466               	.LCFI18:
+ 467               		.cfi_def_cfa_offset 11
+ 468               		.cfi_offset 24, -10
+ 469 01e6 9F93      		push r25
+ 470               	.LCFI19:
+ 471               		.cfi_def_cfa_offset 12
+ 472               		.cfi_offset 25, -11
+ 473 01e8 AF93      		push r26
+ 474               	.LCFI20:
+ 475               		.cfi_def_cfa_offset 13
+ 476               		.cfi_offset 26, -12
+ 477 01ea BF93      		push r27
+ 478               	.LCFI21:
+ 479               		.cfi_def_cfa_offset 14
+ 480               		.cfi_offset 27, -13
+ 481 01ec CF93      		push r28
+ 482               	.LCFI22:
+ 483               		.cfi_def_cfa_offset 15
+ 484               		.cfi_offset 28, -14
+ 485 01ee EF93      		push r30
+ 486               	.LCFI23:
+ 487               		.cfi_def_cfa_offset 16
+ 488               		.cfi_offset 30, -15
+ 489 01f0 FF93      		push r31
+ 490               	.LCFI24:
+ 491               		.cfi_def_cfa_offset 17
+ 492               		.cfi_offset 31, -16
+ 493               	/* prologue: Signal */
+ 494               	/* frame size = 0 */
+ 495               	/* stack size = 16 */
+ 496               	.L__stack_usage = 16
+ 307:serialio.c    **** 	/* Set the overrun flag if UDR overrun occurred */
+ 308:serialio.c    **** #if 0
+ 309:serialio.c    **** 	if(UCSR0A & (1<<DOR0)) {
+ 310:serialio.c    **** 		input_overrun = 1;
+ 311:serialio.c    **** 	}
+ 312:serialio.c    **** #endif
+ 313:serialio.c    **** 	
+ 314:serialio.c    **** 	/* Read the character */
+ 315:serialio.c    **** 	char c;
+ 316:serialio.c    **** 	c = UDR0;
+ 497               		.loc 1 316 0
+ 498 01f2 CCB1      		in r28,44-32
+ 499               	.LVL16:
+ 317:serialio.c    **** 		
+ 318:serialio.c    **** 	if(do_echo && bytes_in_out_buffer < OUTPUT_BUFFER_SIZE) {
+ 500               		.loc 1 318 0
+ 501 01f4 8091 0000 		lds r24,do_echo
+ 502 01f8 8823      		tst r24
+ 503 01fa 01F0      		breq .L27
+ 504               		.loc 1 318 0 is_stmt 0 discriminator 1
+ 505 01fc 8091 0000 		lds r24,bytes_in_out_buffer
+ 506 0200 8F3F      		cpi r24,lo8(-1)
+ 507 0202 01F0      		breq .L27
+ 319:serialio.c    **** 		/* If echoing is enabled and there is output buffer
+ 320:serialio.c    **** 		 * space, echo the received character back to the UART.
+ 321:serialio.c    **** 		 * (If there is no output buffer space, characters
+ 322:serialio.c    **** 		 * will be lost.)
+ 323:serialio.c    **** 		 */
+ 324:serialio.c    **** 		uart_put_char(c, 0);
+ 508               		.loc 1 324 0 is_stmt 1
+ 509 0204 8C2F      		mov r24,r28
+ 510 0206 60E0      		ldi r22,lo8(0)
+ 511 0208 70E0      		ldi r23,hi8(0)
+ 512 020a 0E94 0000 		call uart_put_char
+ 513               	.L27:
+ 325:serialio.c    **** 	}
+ 326:serialio.c    **** 	
+ 327:serialio.c    **** 	/* 
+ 328:serialio.c    **** 	 * Check if we have space in our buffer. If not, set the overrun
+ 329:serialio.c    **** 	 * flag and throw away the character. (We never clear the 
+ 330:serialio.c    **** 	 * overrun flag - it's up to the programmer to check/clear
+ 331:serialio.c    **** 	 * this flag if desired.)
+ 332:serialio.c    **** 	 */
+ 333:serialio.c    **** 	if(bytes_in_input_buffer >= INPUT_BUFFER_SIZE) {
+ 514               		.loc 1 333 0
+ 515 020e 8091 0000 		lds r24,bytes_in_input_buffer
+ 516 0212 8031      		cpi r24,lo8(16)
+ 517 0214 00F0      		brlo .L28
+ 334:serialio.c    **** 		input_overrun = 1;
+ 518               		.loc 1 334 0
+ 519 0216 81E0      		ldi r24,lo8(1)
+ 520 0218 8093 0000 		sts input_overrun,r24
+ 521 021c 00C0      		rjmp .L26
+ 522               	.L28:
+ 335:serialio.c    **** 	} else {
+ 336:serialio.c    **** 		/* If the character is a carriage return, turn it into a
+ 337:serialio.c    **** 		 * linefeed 
+ 338:serialio.c    **** 		*/
+ 339:serialio.c    **** 		if (c == '\r') {
+ 523               		.loc 1 339 0
+ 524 021e CD30      		cpi r28,lo8(13)
+ 525 0220 01F4      		brne .L30
+ 340:serialio.c    **** 			c = '\n';
+ 526               		.loc 1 340 0
+ 527 0222 CAE0      		ldi r28,lo8(10)
+ 528               	.LVL17:
+ 529               	.L30:
+ 341:serialio.c    **** 		}
+ 342:serialio.c    **** 		
+ 343:serialio.c    **** 		/* 
+ 344:serialio.c    **** 		 * There is room in the input buffer 
+ 345:serialio.c    **** 		 */
+ 346:serialio.c    **** 		input_buffer[input_insert_pos++] = c;
+ 530               		.loc 1 346 0
+ 531 0224 8091 0000 		lds r24,input_insert_pos
+ 532 0228 E82F      		mov r30,r24
+ 533 022a F0E0      		ldi r31,lo8(0)
+ 534 022c E050      		subi r30,lo8(-(input_buffer))
+ 535 022e F040      		sbci r31,hi8(-(input_buffer))
+ 536 0230 C083      		st Z,r28
+ 537 0232 8F5F      		subi r24,lo8(-(1))
+ 538 0234 8093 0000 		sts input_insert_pos,r24
+ 347:serialio.c    **** 		bytes_in_input_buffer++;
+ 539               		.loc 1 347 0
+ 540 0238 8091 0000 		lds r24,bytes_in_input_buffer
+ 541 023c 8F5F      		subi r24,lo8(-(1))
+ 542 023e 8093 0000 		sts bytes_in_input_buffer,r24
+ 348:serialio.c    **** 		if(input_insert_pos == INPUT_BUFFER_SIZE) {
+ 543               		.loc 1 348 0
+ 544 0242 8091 0000 		lds r24,input_insert_pos
+ 545 0246 8031      		cpi r24,lo8(16)
+ 546 0248 01F4      		brne .L26
+ 349:serialio.c    **** 			/* Wrap around buffer pointer if necessary */
+ 350:serialio.c    **** 			input_insert_pos = 0;
+ 547               		.loc 1 350 0
+ 548 024a 1092 0000 		sts input_insert_pos,__zero_reg__
+ 549               	.L26:
+ 550               	/* epilogue start */
+ 351:serialio.c    **** 		}
+ 352:serialio.c    **** 	}
+ 353:serialio.c    **** }
+ 551               		.loc 1 353 0
+ 552 024e FF91      		pop r31
+ 553 0250 EF91      		pop r30
+ 554 0252 CF91      		pop r28
+ 555               	.LVL18:
+ 556 0254 BF91      		pop r27
+ 557 0256 AF91      		pop r26
+ 558 0258 9F91      		pop r25
+ 559 025a 8F91      		pop r24
+ 560 025c 7F91      		pop r23
+ 561 025e 6F91      		pop r22
+ 562 0260 5F91      		pop r21
+ 563 0262 4F91      		pop r20
+ 564 0264 3F91      		pop r19
+ 565 0266 2F91      		pop r18
+ 566 0268 0F90      		pop r0
+ 567 026a 0FBE      		out __SREG__,r0
+ 568 026c 0F90      		pop r0
+ 569 026e 1F90      		pop r1
+ 570 0270 1895      		reti
+ 571               		.cfi_endproc
+ 572               	.LFE7:
+ 574               		.comm input_overrun,1,1
+ 575               		.comm bytes_in_input_buffer,1,1
+ 576               		.comm input_insert_pos,1,1
+ 577               		.comm input_buffer,16,1
+ 578               		.comm bytes_in_out_buffer,1,1
+ 579               		.comm out_insert_pos,1,1
+ 580               		.comm out_buffer,255,1
+ 581               		.lcomm do_echo,1
+ 582               		.data
+ 585               	myStream:
+ 586 0000 0000 00   		.skip 3,0
+ 587 0003 03        		.byte	3
+ 588 0004 0000 0000 		.skip 4,0
+ 589 0008 0000      		.word	gs(uart_put_char)
+ 590 000a 0000      		.word	gs(uart_get_char)
+ 591 000c 0000      		.word	0
+ 592               		.text
+ 593               	.Letext0:
+ 594               		.file 2 "/usr/local/CrossPack-AVR-20130212/lib/gcc/avr/4.6.2/../../../../avr/include/stdint.h"
+ 595               		.file 3 "/usr/local/CrossPack-AVR-20130212/lib/gcc/avr/4.6.2/../../../../avr/include/stdio.h"
+DEFINED SYMBOLS
+                            *ABS*:00000000 serialio.c
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//cczOfQ5M.s:2      *ABS*:0000003f __SREG__
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//cczOfQ5M.s:3      *ABS*:0000003e __SP_H__
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//cczOfQ5M.s:4      *ABS*:0000003d __SP_L__
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//cczOfQ5M.s:5      *ABS*:00000034 __CCP__
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//cczOfQ5M.s:6      *ABS*:00000000 __tmp_reg__
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//cczOfQ5M.s:7      *ABS*:00000001 __zero_reg__
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//cczOfQ5M.s:14     .text:00000000 uart_put_char
+                            *COM*:00000001 bytes_in_out_buffer
+                            *COM*:00000001 out_insert_pos
+                            *COM*:000000ff out_buffer
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//cczOfQ5M.s:113    .text:00000064 uart_get_char
+                            *COM*:00000001 bytes_in_input_buffer
+                            *COM*:00000001 input_insert_pos
+                            *COM*:00000010 input_buffer
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//cczOfQ5M.s:189    .text:000000bc init_serial_stdio
+                            *COM*:00000001 input_overrun
+                             .bss:00000000 do_echo
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//cczOfQ5M.s:585    .data:00000000 myStream
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//cczOfQ5M.s:280    .text:00000140 serial_input_available
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//cczOfQ5M.s:302    .text:0000014e clear_serial_input_buffer
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//cczOfQ5M.s:322    .text:00000158 __vector_19
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//cczOfQ5M.s:426    .text:000001ce __vector_18
+
+UNDEFINED SYMBOLS
+__do_copy_data
+__do_clear_bss
+__divmodsi4
+__iob

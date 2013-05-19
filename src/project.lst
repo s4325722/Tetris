@@ -1,0 +1,868 @@
+   1               		.file	"project.c"
+   2               	__SREG__ = 0x3f
+   3               	__SP_H__ = 0x3e
+   4               	__SP_L__ = 0x3d
+   5               	__CCP__ = 0x34
+   6               	__tmp_reg__ = 0
+   7               	__zero_reg__ = 1
+   8               		.global __do_copy_data
+   9               		.global __do_clear_bss
+  10               		.text
+  11               	.Ltext0:
+  12               		.cfi_sections	.debug_frame
+  13               	.global	timer_activities
+  15               	timer_activities:
+  16               	.LFB5:
+  17               		.file 1 "project.c"
+   1:project.c     **** /*
+   2:project.c     ****  * project.c - main file 
+   3:project.c     ****  *
+   4:project.c     ****  * Original version by Peter Sutton. Modified by <YOUR NAME(S) HERE>
+   5:project.c     ****  */
+   6:project.c     **** 
+   7:project.c     **** #include "board.h"
+   8:project.c     **** #include "led_display.h"
+   9:project.c     **** #include "keypad.h"
+  10:project.c     **** #include "serialio.h"
+  11:project.c     **** #include "timer2.h"
+  12:project.c     **** #include "score.h"
+  13:project.c     **** #include "scrolling_char_display.h"
+  14:project.c     **** #include "external_interrupt.h"
+  15:project.c     **** #include "terminalio.h"
+  16:project.c     **** #include <stdio.h>
+  17:project.c     **** #include <stdint.h>
+  18:project.c     **** 
+  19:project.c     **** #ifdef AVR
+  20:project.c     **** #include <avr/io.h>
+  21:project.c     **** #include <avr/interrupt.h>
+  22:project.c     **** #else
+  23:project.c     **** /* For non AVR build, we remove our interrupt enable */
+  24:project.c     **** #define sei(arg)
+  25:project.c     **** #endif
+  26:project.c     **** 
+  27:project.c     **** /*
+  28:project.c     ****  * Function prototypes - these are defined below main()
+  29:project.c     **** */
+  30:project.c     **** void initialise_hardware(void);
+  31:project.c     **** void splash_screen(void);
+  32:project.c     **** void new_game(void);
+  33:project.c     **** void play_game(void);
+  34:project.c     **** void handle_game_over(void);
+  35:project.c     **** 
+  36:project.c     **** /*
+  37:project.c     ****  * main -- Main program.
+  38:project.c     ****  */
+  39:project.c     **** int main(void) {		
+  40:project.c     **** 	/* Setup all our hardware peripherals and call backs. This 
+  41:project.c     **** 	 * will turn on interrupts.
+  42:project.c     **** 	 */
+  43:project.c     **** 	initialise_hardware();
+  44:project.c     **** 
+  45:project.c     **** 	/* Show the splash screen message. This returns when 
+  46:project.c     **** 	 * message display is complete. 
+  47:project.c     **** 	 */
+  48:project.c     **** 	splash_screen();
+  49:project.c     **** 	
+  50:project.c     **** 	/* Play the game - forever */
+  51:project.c     **** 	while(1) {
+  52:project.c     **** 		new_game();
+  53:project.c     **** 		play_game();
+  54:project.c     **** 		handle_game_over();
+  55:project.c     **** 	}
+  56:project.c     **** }
+  57:project.c     **** 
+  58:project.c     **** void new_game(void) {
+  59:project.c     **** 	/* 
+  60:project.c     **** 	 * Initialise the board, and display it. 
+  61:project.c     **** 	 */
+  62:project.c     **** 	init_board();
+  63:project.c     **** 	copy_board_to_led_display();
+  64:project.c     **** 	
+  65:project.c     **** 	/* Initialise the score module */
+  66:project.c     **** 	init_score();
+  67:project.c     **** 	
+  68:project.c     **** 	/* Clear any button pushes and serial input. The (void) cast
+  69:project.c     **** 	 * indicates that we are discarding the return value.
+  70:project.c     **** 	 */
+  71:project.c     **** 	(void)button_pushed();
+  72:project.c     **** 	(void)keypad_button_pushed();
+  73:project.c     **** 	clear_serial_input_buffer();
+  74:project.c     **** }
+  75:project.c     **** 
+  76:project.c     **** /* Play the game */
+  77:project.c     **** void play_game(void) {
+  78:project.c     **** 	uint32_t current_time, last_piece_drop_time;
+  79:project.c     **** 	uint8_t board_updated = 0;		/* 1 if we have to redraw display */
+  80:project.c     **** 	char input;
+  81:project.c     **** 	
+  82:project.c     **** 	/* Event loop that waits for various times to be reached and whether
+  83:project.c     **** 	 * various button events have happened.
+  84:project.c     **** 	 */	
+  85:project.c     **** 	current_time = get_clock_ticks();
+  86:project.c     **** 	last_piece_drop_time = current_time;
+  87:project.c     **** 	while(1) {
+  88:project.c     **** 		/* We know board_updated is 0 at this point */
+  89:project.c     **** 		current_time = get_clock_ticks();
+  90:project.c     **** 		if(current_time >= last_piece_drop_time + 1000) {
+  91:project.c     **** 			/* Drop a piece every 1000ms. */
+  92:project.c     **** 			if(have_current_piece()) {
+  93:project.c     **** 				/* Attempt to drop piece by 1 row */
+  94:project.c     **** 				board_updated = attempt_drop_piece_one_row();
+  95:project.c     **** 				if(!board_updated) {
+  96:project.c     **** 					/* Couldn't drop piece - add to board */
+  97:project.c     **** 					fix_piece_to_board();
+  98:project.c     **** 					board_updated = 1;
+  99:project.c     **** 				}
+ 100:project.c     **** 				last_piece_drop_time = current_time;
+ 101:project.c     **** 			} else {
+ 102:project.c     **** 				/* No current piece - add one */
+ 103:project.c     **** 				if(add_random_piece()) {
+ 104:project.c     **** 					/* Addition of piece succeeded */
+ 105:project.c     **** 					board_updated = 1;
+ 106:project.c     **** 				} else {
+ 107:project.c     **** 					/* Addition of piece failed - game over */
+ 108:project.c     **** 					return;
+ 109:project.c     **** 				}				
+ 110:project.c     **** 			}
+ 111:project.c     **** 		}
+ 112:project.c     **** 		
+ 113:project.c     **** 		/* Check for button pushes and/or serial input. */
+ 114:project.c     **** 		input = keypad_button_pushed();
+ 115:project.c     **** 		if(!input) {
+ 116:project.c     **** 			input = button_pushed();
+ 117:project.c     **** 			if(input >= 0 && input <= 3) {
+ 118:project.c     **** 				/* Button was pushed (0 to 3) - turn these into lower case
+ 119:project.c     **** 				 * characters, i.e. 0 to 'a', 1 to 'b' etc.
+ 120:project.c     **** 				 */
+ 121:project.c     **** 				input += 97;	/* ASCII code for 'a' */
+ 122:project.c     **** 			} else {
+ 123:project.c     **** 				/* No button was pushed */
+ 124:project.c     **** 				input = 0;
+ 125:project.c     **** 			}
+ 126:project.c     **** 		}
+ 127:project.c     **** 		if(!input && serial_input_available()) {
+ 128:project.c     **** 			/* No keypad or push button was pushed, but serial input is
+ 129:project.c     **** 			 * available. Fetch it. We can use the serial port
+ 130:project.c     **** 			 * to emulate the push buttons etc below.
+ 131:project.c     **** 			 */
+ 132:project.c     **** 			input = fgetc(stdin);
+ 133:project.c     **** 		}
+ 134:project.c     **** 		switch(input) {
+ 135:project.c     **** 			case 'A':	/* Keypad 'A' */
+ 136:project.c     **** 				/* Attempt to rotate the current piece */
+ 137:project.c     **** 				if(have_current_piece()) {
+ 138:project.c     **** 					board_updated |= attempt_rotation();
+ 139:project.c     **** 				}
+ 140:project.c     **** 				break;
+ 141:project.c     **** 			case '1':	/* Keypad '1' */
+ 142:project.c     **** 				/* Attempt to drop the piece by one row */
+ 143:project.c     **** 				if(have_current_piece()) {
+ 144:project.c     **** 					if(!attempt_drop_piece_one_row()) {
+ 145:project.c     **** 						fix_piece_to_board();
+ 146:project.c     **** 					}
+ 147:project.c     **** 					board_updated = 1;
+ 148:project.c     **** 					last_piece_drop_time = current_time;
+ 149:project.c     **** 				}				
+ 150:project.c     **** 				break;
+ 151:project.c     **** 			case 'D':	/* Keypad 'D' */
+ 152:project.c     **** 				/* Attempt a move to the right */
+ 153:project.c     **** 				if(have_current_piece()) {
+ 154:project.c     **** 					board_updated = attempt_move(MOVE_RIGHT);
+ 155:project.c     **** 				}				
+ 156:project.c     **** 				break;
+ 157:project.c     **** 			case '0':	/* Keypad '0' */
+ 158:project.c     **** 				/* Attempt a move to the left */
+ 159:project.c     **** 				if(have_current_piece()) {
+ 160:project.c     **** 					board_updated = attempt_move(MOVE_LEFT);
+ 161:project.c     **** 				}				
+ 162:project.c     **** 				break;
+ 163:project.c     **** 			case 'a':	/* Button 0 */
+ 164:project.c     **** 				/* Pause/unpause the game */
+ 165:project.c     **** 				/* UNIMPLEMENTED FEATURE */
+ 166:project.c     **** 				break;
+ 167:project.c     **** 			default:
+ 168:project.c     **** 				/* Ignore other button pushes or null event. */
+ 169:project.c     **** 				break;				
+ 170:project.c     **** 		}
+ 171:project.c     **** 		
+ 172:project.c     **** 		if(board_updated) {
+ 173:project.c     **** 			/* Update display of board since its appearance has changed. */
+ 174:project.c     **** 			copy_board_to_led_display();
+ 175:project.c     **** 			board_updated = 0;
+ 176:project.c     **** 		}
+ 177:project.c     **** 	}
+ 178:project.c     **** }
+ 179:project.c     **** 
+ 180:project.c     **** /* Handle the game being over. By default - pause forever. */
+ 181:project.c     **** void handle_game_over(void) {
+ 182:project.c     **** 	while(1) {
+ 183:project.c     **** 		; /* Do nothing */
+ 184:project.c     **** 	}
+ 185:project.c     **** }
+ 186:project.c     **** 
+ 187:project.c     **** /* Function to be called on every interrupt of timer 2 (every ms). Note that
+ 188:project.c     ****  * interrupts are still disabled when this function is called.
+ 189:project.c     ****  */
+ 190:project.c     **** void timer_activities(void) {
+  18               		.loc 1 190 0
+  19               		.cfi_startproc
+  20               	/* prologue: function */
+  21               	/* frame size = 0 */
+  22               	/* stack size = 0 */
+  23               	.L__stack_usage = 0
+ 191:project.c     **** 	/* Update our LED display */
+ 192:project.c     **** 	display_row();
+  24               		.loc 1 192 0
+  25 0000 0E94 0000 		call display_row
+ 193:project.c     **** 	
+ 194:project.c     **** 	/* Check the next column of our keypad for any button pushes. */
+ 195:project.c     **** 	check_keypad_column();
+  26               		.loc 1 195 0
+  27 0004 0E94 0000 		call check_keypad_column
+  28               	/* epilogue start */
+ 196:project.c     **** }
+  29               		.loc 1 196 0
+  30 0008 0895      		ret
+  31               		.cfi_endproc
+  32               	.LFE5:
+  34               	.global	new_game
+  36               	new_game:
+  37               	.LFB2:
+  58:project.c     **** void new_game(void) {
+  38               		.loc 1 58 0
+  39               		.cfi_startproc
+  40               	/* prologue: function */
+  41               	/* frame size = 0 */
+  42               	/* stack size = 0 */
+  43               	.L__stack_usage = 0
+  62:project.c     **** 	init_board();
+  44               		.loc 1 62 0
+  45 000a 0E94 0000 		call init_board
+  63:project.c     **** 	copy_board_to_led_display();
+  46               		.loc 1 63 0
+  47 000e 0E94 0000 		call copy_board_to_led_display
+  66:project.c     **** 	init_score();
+  48               		.loc 1 66 0
+  49 0012 0E94 0000 		call init_score
+  71:project.c     **** 	(void)button_pushed();
+  50               		.loc 1 71 0
+  51 0016 0E94 0000 		call button_pushed
+  72:project.c     **** 	(void)keypad_button_pushed();
+  52               		.loc 1 72 0
+  53 001a 0E94 0000 		call keypad_button_pushed
+  73:project.c     **** 	clear_serial_input_buffer();
+  54               		.loc 1 73 0
+  55 001e 0E94 0000 		call clear_serial_input_buffer
+  56               	/* epilogue start */
+  74:project.c     **** }
+  57               		.loc 1 74 0
+  58 0022 0895      		ret
+  59               		.cfi_endproc
+  60               	.LFE2:
+  62               	.global	play_game
+  64               	play_game:
+  65               	.LFB3:
+  77:project.c     **** void play_game(void) {
+  66               		.loc 1 77 0
+  67               		.cfi_startproc
+  68 0024 8F92      		push r8
+  69               	.LCFI0:
+  70               		.cfi_def_cfa_offset 3
+  71               		.cfi_offset 8, -2
+  72 0026 9F92      		push r9
+  73               	.LCFI1:
+  74               		.cfi_def_cfa_offset 4
+  75               		.cfi_offset 9, -3
+  76 0028 AF92      		push r10
+  77               	.LCFI2:
+  78               		.cfi_def_cfa_offset 5
+  79               		.cfi_offset 10, -4
+  80 002a BF92      		push r11
+  81               	.LCFI3:
+  82               		.cfi_def_cfa_offset 6
+  83               		.cfi_offset 11, -5
+  84 002c CF92      		push r12
+  85               	.LCFI4:
+  86               		.cfi_def_cfa_offset 7
+  87               		.cfi_offset 12, -6
+  88 002e DF92      		push r13
+  89               	.LCFI5:
+  90               		.cfi_def_cfa_offset 8
+  91               		.cfi_offset 13, -7
+  92 0030 EF92      		push r14
+  93               	.LCFI6:
+  94               		.cfi_def_cfa_offset 9
+  95               		.cfi_offset 14, -8
+  96 0032 FF92      		push r15
+  97               	.LCFI7:
+  98               		.cfi_def_cfa_offset 10
+  99               		.cfi_offset 15, -9
+ 100 0034 CF93      		push r28
+ 101               	.LCFI8:
+ 102               		.cfi_def_cfa_offset 11
+ 103               		.cfi_offset 28, -10
+ 104               	/* prologue: function */
+ 105               	/* frame size = 0 */
+ 106               	/* stack size = 9 */
+ 107               	.L__stack_usage = 9
+ 108               	.LVL0:
+  85:project.c     **** 	current_time = get_clock_ticks();
+ 109               		.loc 1 85 0
+ 110 0036 0E94 0000 		call get_clock_ticks
+ 111               	.LVL1:
+  86:project.c     **** 	last_piece_drop_time = current_time;
+ 112               		.loc 1 86 0
+ 113 003a 4B01      		movw r8,r22
+ 114 003c 5C01      		movw r10,r24
+ 115               	.LVL2:
+ 116               	.L25:
+  89:project.c     **** 		current_time = get_clock_ticks();
+ 117               		.loc 1 89 0
+ 118 003e 0E94 0000 		call get_clock_ticks
+ 119 0042 6B01      		movw r12,r22
+ 120 0044 7C01      		movw r14,r24
+ 121               	.LVL3:
+  90:project.c     **** 		if(current_time >= last_piece_drop_time + 1000) {
+ 122               		.loc 1 90 0
+ 123 0046 D501      		movw r26,r10
+ 124 0048 C401      		movw r24,r8
+ 125 004a 8851      		subi r24,lo8(-(1000))
+ 126 004c 9C4F      		sbci r25,hi8(-(1000))
+ 127 004e AF4F      		sbci r26,hlo8(-(1000))
+ 128 0050 BF4F      		sbci r27,hhi8(-(1000))
+ 129 0052 C816      		cp r12,r24
+ 130 0054 D906      		cpc r13,r25
+ 131 0056 EA06      		cpc r14,r26
+ 132 0058 FB06      		cpc r15,r27
+ 133 005a 00F0      		brlo .L21
+  92:project.c     **** 			if(have_current_piece()) {
+ 134               		.loc 1 92 0
+ 135 005c 0E94 0000 		call have_current_piece
+ 136               	.LVL4:
+ 137 0060 8823      		tst r24
+ 138 0062 01F0      		breq .L6
+  94:project.c     **** 				board_updated = attempt_drop_piece_one_row();
+ 139               		.loc 1 94 0
+ 140 0064 0E94 0000 		call attempt_drop_piece_one_row
+ 141 0068 C82F      		mov r28,r24
+ 142               	.LVL5:
+  95:project.c     **** 				if(!board_updated) {
+ 143               		.loc 1 95 0
+ 144 006a 8823      		tst r24
+ 145 006c 01F4      		brne .L22
+  97:project.c     **** 					fix_piece_to_board();
+ 146               		.loc 1 97 0
+ 147 006e 0E94 0000 		call fix_piece_to_board
+ 148               	.LVL6:
+ 149 0072 4601      		movw r8,r12
+ 150 0074 5701      		movw r10,r14
+ 151               	.LVL7:
+ 152 0076 00C0      		rjmp .L26
+ 153               	.LVL8:
+ 154               	.L6:
+ 103:project.c     **** 				if(add_random_piece()) {
+ 155               		.loc 1 103 0
+ 156 0078 0E94 0000 		call add_random_piece
+ 157 007c 8823      		tst r24
+ 158 007e 01F4      		brne .+2
+ 159 0080 00C0      		rjmp .L3
+ 160               	.LVL9:
+ 161               	.L26:
+ 105:project.c     **** 					board_updated = 1;
+ 162               		.loc 1 105 0
+ 163 0082 C1E0      		ldi r28,lo8(1)
+ 164 0084 00C0      		rjmp .L5
+ 165               	.LVL10:
+ 166               	.L21:
+  90:project.c     **** 		if(current_time >= last_piece_drop_time + 1000) {
+ 167               		.loc 1 90 0
+ 168 0086 C0E0      		ldi r28,lo8(0)
+ 169 0088 00C0      		rjmp .L5
+ 170               	.LVL11:
+ 171               	.L22:
+  95:project.c     **** 				if(!board_updated) {
+ 172               		.loc 1 95 0
+ 173 008a 4601      		movw r8,r12
+ 174 008c 5701      		movw r10,r14
+ 175               	.LVL12:
+ 176               	.L5:
+ 114:project.c     **** 		input = keypad_button_pushed();
+ 177               		.loc 1 114 0
+ 178 008e 0E94 0000 		call keypad_button_pushed
+ 179               	.LVL13:
+ 115:project.c     **** 		if(!input) {
+ 180               		.loc 1 115 0
+ 181 0092 8823      		tst r24
+ 182 0094 01F4      		brne .L10
+ 116:project.c     **** 			input = button_pushed();
+ 183               		.loc 1 116 0
+ 184 0096 0E94 0000 		call button_pushed
+ 185               	.LVL14:
+ 117:project.c     **** 			if(input >= 0 && input <= 3) {
+ 186               		.loc 1 117 0
+ 187 009a 8430      		cpi r24,lo8(4)
+ 188 009c 00F4      		brsh .L9
+ 121:project.c     **** 				input += 97;	/* ASCII code for 'a' */
+ 189               		.loc 1 121 0
+ 190 009e 8F59      		subi r24,lo8(-(97))
+ 191               	.LVL15:
+ 192 00a0 00C0      		rjmp .L10
+ 193               	.LVL16:
+ 194               	.L30:
+ 132:project.c     **** 			input = fgetc(stdin);
+ 195               		.loc 1 132 0
+ 196 00a2 8091 0000 		lds r24,__iob
+ 197 00a6 9091 0000 		lds r25,__iob+1
+ 198 00aa 0E94 0000 		call fgetc
+ 199               	.LVL17:
+ 200               	.L10:
+ 134:project.c     **** 		switch(input) {
+ 201               		.loc 1 134 0
+ 202 00ae 8133      		cpi r24,lo8(49)
+ 203 00b0 01F0      		breq .L13
+ 204 00b2 8233      		cpi r24,lo8(50)
+ 205 00b4 00F4      		brsh .L16
+ 206 00b6 8033      		cpi r24,lo8(48)
+ 207 00b8 01F4      		brne .L11
+ 208 00ba 00C0      		rjmp .L28
+ 209               	.L16:
+ 210 00bc 8134      		cpi r24,lo8(65)
+ 211 00be 01F0      		breq .L14
+ 212 00c0 8434      		cpi r24,lo8(68)
+ 213 00c2 01F4      		brne .L11
+ 214 00c4 00C0      		rjmp .L29
+ 215               	.L14:
+ 137:project.c     **** 				if(have_current_piece()) {
+ 216               		.loc 1 137 0
+ 217 00c6 0E94 0000 		call have_current_piece
+ 218               	.LVL18:
+ 219 00ca 8823      		tst r24
+ 220 00cc 01F0      		breq .L11
+ 138:project.c     **** 					board_updated |= attempt_rotation();
+ 221               		.loc 1 138 0
+ 222 00ce 0E94 0000 		call attempt_rotation
+ 223 00d2 C82B      		or r28,r24
+ 224               	.LVL19:
+ 225 00d4 00C0      		rjmp .L11
+ 226               	.LVL20:
+ 227               	.L13:
+ 143:project.c     **** 				if(have_current_piece()) {
+ 228               		.loc 1 143 0
+ 229 00d6 0E94 0000 		call have_current_piece
+ 230               	.LVL21:
+ 231 00da 8823      		tst r24
+ 232 00dc 01F0      		breq .L11
+ 144:project.c     **** 					if(!attempt_drop_piece_one_row()) {
+ 233               		.loc 1 144 0
+ 234 00de 0E94 0000 		call attempt_drop_piece_one_row
+ 235 00e2 8823      		tst r24
+ 236 00e4 01F4      		brne .L17
+ 145:project.c     **** 						fix_piece_to_board();
+ 237               		.loc 1 145 0
+ 238 00e6 0E94 0000 		call fix_piece_to_board
+ 239 00ea 00C0      		rjmp .L17
+ 240               	.LVL22:
+ 241               	.L29:
+ 153:project.c     **** 				if(have_current_piece()) {
+ 242               		.loc 1 153 0
+ 243 00ec 0E94 0000 		call have_current_piece
+ 244               	.LVL23:
+ 245 00f0 8823      		tst r24
+ 246 00f2 01F0      		breq .L11
+ 154:project.c     **** 					board_updated = attempt_move(MOVE_RIGHT);
+ 247               		.loc 1 154 0
+ 248 00f4 81E0      		ldi r24,lo8(1)
+ 249 00f6 00C0      		rjmp .L27
+ 250               	.LVL24:
+ 251               	.L28:
+ 159:project.c     **** 				if(have_current_piece()) {
+ 252               		.loc 1 159 0
+ 253 00f8 0E94 0000 		call have_current_piece
+ 254               	.LVL25:
+ 255 00fc 8823      		tst r24
+ 256 00fe 01F0      		breq .L11
+ 160:project.c     **** 					board_updated = attempt_move(MOVE_LEFT);
+ 257               		.loc 1 160 0
+ 258 0100 80E0      		ldi r24,lo8(0)
+ 259               	.L27:
+ 260 0102 0E94 0000 		call attempt_move
+ 261 0106 C82F      		mov r28,r24
+ 262               	.LVL26:
+ 263               	.L11:
+ 172:project.c     **** 		if(board_updated) {
+ 264               		.loc 1 172 0
+ 265 0108 CC23      		tst r28
+ 266 010a 01F4      		brne .+2
+ 267 010c 00C0      		rjmp .L25
+ 268               	.LVL27:
+ 269               	.L20:
+ 174:project.c     **** 			copy_board_to_led_display();
+ 270               		.loc 1 174 0
+ 271 010e 0E94 0000 		call copy_board_to_led_display
+ 272               	.LVL28:
+ 273 0112 00C0      		rjmp .L25
+ 274               	.LVL29:
+ 275               	.L9:
+ 127:project.c     **** 		if(!input && serial_input_available()) {
+ 276               		.loc 1 127 0
+ 277 0114 0E94 0000 		call serial_input_available
+ 278 0118 8823      		tst r24
+ 279 011a 01F0      		breq .L11
+ 280 011c 00C0      		rjmp .L30
+ 281               	.LVL30:
+ 282               	.L17:
+  89:project.c     **** 		current_time = get_clock_ticks();
+ 283               		.loc 1 89 0
+ 284 011e 4601      		movw r8,r12
+ 285 0120 5701      		movw r10,r14
+ 286 0122 00C0      		rjmp .L20
+ 287               	.LVL31:
+ 288               	.L3:
+ 289               	/* epilogue start */
+ 178:project.c     **** }
+ 290               		.loc 1 178 0
+ 291 0124 CF91      		pop r28
+ 292 0126 FF90      		pop r15
+ 293 0128 EF90      		pop r14
+ 294 012a DF90      		pop r13
+ 295 012c CF90      		pop r12
+ 296               	.LVL32:
+ 297 012e BF90      		pop r11
+ 298 0130 AF90      		pop r10
+ 299 0132 9F90      		pop r9
+ 300 0134 8F90      		pop r8
+ 301               	.LVL33:
+ 302 0136 0895      		ret
+ 303               		.cfi_endproc
+ 304               	.LFE3:
+ 306               	.global	handle_game_over
+ 308               	handle_game_over:
+ 309               	.LFB4:
+ 181:project.c     **** void handle_game_over(void) {
+ 310               		.loc 1 181 0
+ 311               		.cfi_startproc
+ 312               	/* prologue: function */
+ 313               	/* frame size = 0 */
+ 314               	/* stack size = 0 */
+ 315               	.L__stack_usage = 0
+ 316               	.L32:
+ 317 0138 00C0      		rjmp .L32
+ 318               		.cfi_endproc
+ 319               	.LFE4:
+ 321               	.global	initialise_hardware
+ 323               	initialise_hardware:
+ 324               	.LFB6:
+ 197:project.c     **** 
+ 198:project.c     **** void initialise_hardware(void) {
+ 325               		.loc 1 198 0
+ 326               		.cfi_startproc
+ 327               	/* prologue: function */
+ 328               	/* frame size = 0 */
+ 329               	/* stack size = 0 */
+ 330               	.L__stack_usage = 0
+ 199:project.c     **** 	/* Initialise hardware modules (interrupts, data direction
+ 200:project.c     **** 	 * registers etc. This should only need to be done once.
+ 201:project.c     **** 	 */
+ 202:project.c     **** 	
+ 203:project.c     **** 	/* Initialise serial IO - baud rate of 19200 and no echo */
+ 204:project.c     **** 	init_serial_stdio(19200, 0);
+ 331               		.loc 1 204 0
+ 332 013a 60E0      		ldi r22,lo8(19200)
+ 333 013c 7BE4      		ldi r23,hi8(19200)
+ 334 013e 80E0      		ldi r24,hlo8(19200)
+ 335 0140 90E0      		ldi r25,hhi8(19200)
+ 336 0142 40E0      		ldi r20,lo8(0)
+ 337 0144 0E94 0000 		call init_serial_stdio
+ 205:project.c     **** 
+ 206:project.c     **** 	/* Initialise the LED board display */
+ 207:project.c     **** 	init_led_display();
+ 338               		.loc 1 207 0
+ 339 0148 0E94 0000 		call init_led_display
+ 208:project.c     **** 	
+ 209:project.c     **** 	/* Initialise the keypad. We don't provide a handler, we'll
+ 210:project.c     **** 	 * rely on asking the keypad module for the last button pushed.
+ 211:project.c     **** 	 */
+ 212:project.c     **** 	init_keypad(NULL);
+ 340               		.loc 1 212 0
+ 341 014c 80E0      		ldi r24,lo8(0)
+ 342 014e 90E0      		ldi r25,hi8(0)
+ 343 0150 0E94 0000 		call init_keypad
+ 213:project.c     **** 
+ 214:project.c     **** 	/* Initialise the timer which gives us clock ticks
+ 215:project.c     **** 	 * to time things by. We specify that the timer_activities()
+ 216:project.c     **** 	 * function above should be called on every interrupt.
+ 217:project.c     **** 	 */
+ 218:project.c     **** 	init_timer2(timer_activities);
+ 344               		.loc 1 218 0
+ 345 0154 80E0      		ldi r24,lo8(gs(timer_activities))
+ 346 0156 90E0      		ldi r25,hi8(gs(timer_activities))
+ 347 0158 0E94 0000 		call init_timer2
+ 219:project.c     **** 	
+ 220:project.c     **** 	/* Initialise our external button interrupts */
+ 221:project.c     **** 	init_external_interrupts();
+ 348               		.loc 1 221 0
+ 349 015c 0E94 0000 		call init_external_interrupts
+ 222:project.c     **** 	
+ 223:project.c     **** 	/*
+ 224:project.c     **** 	 * Turn on interrupts (needed for timer, serialIO etc. to work)
+ 225:project.c     **** 	 */
+ 226:project.c     **** 	sei();
+ 350               		.loc 1 226 0
+ 351               	/* #APP */
+ 352               	 ;  226 "project.c" 1
+ 353 0160 7894      		sei
+ 354               	 ;  0 "" 2
+ 355               	/* epilogue start */
+ 227:project.c     **** }
+ 356               		.loc 1 227 0
+ 357               	/* #NOAPP */
+ 358 0162 0895      		ret
+ 359               		.cfi_endproc
+ 360               	.LFE6:
+ 362               		.data
+ 363               	.LC0:
+ 364 0000 5445 5452 		.string	"TETRIS - CSSE2010/CSSE7201 Project"
+ 364      4953 202D 
+ 364      2043 5353 
+ 364      4532 3031 
+ 364      302F 4353 
+ 365               	.LC1:
+ 366 0023 5465 7472 		.string	"Tetris"
+ 366      6973 00
+ 367               		.text
+ 368               	.global	splash_screen
+ 370               	splash_screen:
+ 371               	.LFB7:
+ 228:project.c     **** 
+ 229:project.c     **** void splash_screen(void) {
+ 372               		.loc 1 229 0
+ 373               		.cfi_startproc
+ 374 0164 8F92      		push r8
+ 375               	.LCFI9:
+ 376               		.cfi_def_cfa_offset 3
+ 377               		.cfi_offset 8, -2
+ 378 0166 9F92      		push r9
+ 379               	.LCFI10:
+ 380               		.cfi_def_cfa_offset 4
+ 381               		.cfi_offset 9, -3
+ 382 0168 AF92      		push r10
+ 383               	.LCFI11:
+ 384               		.cfi_def_cfa_offset 5
+ 385               		.cfi_offset 10, -4
+ 386 016a BF92      		push r11
+ 387               	.LCFI12:
+ 388               		.cfi_def_cfa_offset 6
+ 389               		.cfi_offset 11, -5
+ 390 016c CF92      		push r12
+ 391               	.LCFI13:
+ 392               		.cfi_def_cfa_offset 7
+ 393               		.cfi_offset 12, -6
+ 394 016e DF92      		push r13
+ 395               	.LCFI14:
+ 396               		.cfi_def_cfa_offset 8
+ 397               		.cfi_offset 13, -7
+ 398 0170 EF92      		push r14
+ 399               	.LCFI15:
+ 400               		.cfi_def_cfa_offset 9
+ 401               		.cfi_offset 14, -8
+ 402 0172 FF92      		push r15
+ 403               	.LCFI16:
+ 404               		.cfi_def_cfa_offset 10
+ 405               		.cfi_offset 15, -9
+ 406               	/* prologue: function */
+ 407               	/* frame size = 0 */
+ 408               	/* stack size = 8 */
+ 409               	.L__stack_usage = 8
+ 410               	.LVL34:
+ 230:project.c     **** 	uint32_t currentTime;
+ 231:project.c     **** 	uint32_t displayLastScrolledTime = 0;
+ 232:project.c     **** 	
+ 233:project.c     **** 	/* Display a message on the serial terminal */
+ 234:project.c     **** 	clear_terminal();
+ 411               		.loc 1 234 0
+ 412 0174 0E94 0000 		call clear_terminal
+ 235:project.c     **** 	move_cursor(10,12);
+ 413               		.loc 1 235 0
+ 414 0178 8AE0      		ldi r24,lo8(10)
+ 415 017a 90E0      		ldi r25,hi8(10)
+ 416 017c 6CE0      		ldi r22,lo8(12)
+ 417 017e 70E0      		ldi r23,hi8(12)
+ 418 0180 0E94 0000 		call move_cursor
+ 236:project.c     **** 	printf("TETRIS - CSSE2010/CSSE7201 Project\n");
+ 419               		.loc 1 236 0
+ 420 0184 80E0      		ldi r24,lo8(.LC0)
+ 421 0186 90E0      		ldi r25,hi8(.LC0)
+ 422 0188 0E94 0000 		call puts
+ 237:project.c     **** 
+ 238:project.c     **** 	/* This is the text we'll scroll on the LED display. */
+ 239:project.c     **** 	set_scrolling_display_text("Tetris");
+ 423               		.loc 1 239 0
+ 424 018c 80E0      		ldi r24,lo8(.LC1)
+ 425 018e 90E0      		ldi r25,hi8(.LC1)
+ 426 0190 0E94 0000 		call set_scrolling_display_text
+ 231:project.c     **** 	uint32_t displayLastScrolledTime = 0;
+ 427               		.loc 1 231 0
+ 428 0194 8824      		clr r8
+ 429 0196 9924      		clr r9
+ 430 0198 5401      		movw r10,r8
+ 431               	.LVL35:
+ 432               	.L37:
+ 240:project.c     **** 
+ 241:project.c     **** 	/* We scroll the message until the display is blank or a keypad button
+ 242:project.c     **** 	 * is pushed or a push button is pushed.
+ 243:project.c     **** 	 */
+ 244:project.c     **** 	while(1) {
+ 245:project.c     **** 		currentTime = get_clock_ticks();
+ 433               		.loc 1 245 0
+ 434 019a 0E94 0000 		call get_clock_ticks
+ 435 019e 6B01      		movw r12,r22
+ 436 01a0 7C01      		movw r14,r24
+ 437               	.LVL36:
+ 246:project.c     **** 		
+ 247:project.c     **** 		if(currentTime >= displayLastScrolledTime + 150) {
+ 438               		.loc 1 247 0
+ 439 01a2 D501      		movw r26,r10
+ 440 01a4 C401      		movw r24,r8
+ 441 01a6 8A56      		subi r24,lo8(-(150))
+ 442 01a8 9F4F      		sbci r25,hi8(-(150))
+ 443 01aa AF4F      		sbci r26,hlo8(-(150))
+ 444 01ac BF4F      		sbci r27,hhi8(-(150))
+ 445 01ae C816      		cp r12,r24
+ 446 01b0 D906      		cpc r13,r25
+ 447 01b2 EA06      		cpc r14,r26
+ 448 01b4 FB06      		cpc r15,r27
+ 449 01b6 00F0      		brlo .L35
+ 248:project.c     **** 			/* Scroll our message every 150ms. Exit the loop
+ 249:project.c     **** 			 * if finished (scroll_display() returns 0).
+ 250:project.c     **** 			*/
+ 251:project.c     **** 			if(scroll_display() == 0) {
+ 450               		.loc 1 251 0
+ 451 01b8 0E94 0000 		call scroll_display
+ 452               	.LVL37:
+ 453 01bc 8823      		tst r24
+ 454 01be 01F0      		breq .L34
+ 455 01c0 4601      		movw r8,r12
+ 456 01c2 5701      		movw r10,r14
+ 457               	.LVL38:
+ 458               	.L35:
+ 252:project.c     **** 				break;
+ 253:project.c     **** 			}
+ 254:project.c     **** 			displayLastScrolledTime = currentTime;
+ 255:project.c     **** 		}
+ 256:project.c     **** 		if(button_pushed() != -1 || keypad_button_pushed() != 0 || 
+ 459               		.loc 1 256 0
+ 460 01c4 0E94 0000 		call button_pushed
+ 461 01c8 8F3F      		cpi r24,lo8(-1)
+ 462 01ca 01F4      		brne .L34
+ 463               		.loc 1 256 0 is_stmt 0 discriminator 1
+ 464 01cc 0E94 0000 		call keypad_button_pushed
+ 465 01d0 8823      		tst r24
+ 466 01d2 01F4      		brne .L34
+ 257:project.c     **** 				serial_input_available()) {
+ 467               		.loc 1 257 0 is_stmt 1 discriminator 1
+ 468 01d4 0E94 0000 		call serial_input_available
+ 256:project.c     **** 		if(button_pushed() != -1 || keypad_button_pushed() != 0 || 
+ 469               		.loc 1 256 0 discriminator 1
+ 470 01d8 8823      		tst r24
+ 471 01da 01F0      		breq .L37
+ 472               	.L34:
+ 473               	/* epilogue start */
+ 258:project.c     **** 			/* A push button or keypad button or key was pressed - abort 
+ 259:project.c     **** 			 * showing our splash screen.
+ 260:project.c     **** 			 */
+ 261:project.c     **** 			break;
+ 262:project.c     **** 		}
+ 263:project.c     **** 	}		
+ 264:project.c     **** }
+ 474               		.loc 1 264 0
+ 475 01dc FF90      		pop r15
+ 476 01de EF90      		pop r14
+ 477 01e0 DF90      		pop r13
+ 478 01e2 CF90      		pop r12
+ 479               	.LVL39:
+ 480 01e4 BF90      		pop r11
+ 481 01e6 AF90      		pop r10
+ 482 01e8 9F90      		pop r9
+ 483 01ea 8F90      		pop r8
+ 484               	.LVL40:
+ 485 01ec 0895      		ret
+ 486               		.cfi_endproc
+ 487               	.LFE7:
+ 489               		.section	.text.startup,"ax",@progbits
+ 490               	.global	main
+ 492               	main:
+ 493               	.LFB1:
+  39:project.c     **** int main(void) {		
+ 494               		.loc 1 39 0
+ 495               		.cfi_startproc
+ 496               	/* prologue: function */
+ 497               	/* frame size = 0 */
+ 498               	/* stack size = 0 */
+ 499               	.L__stack_usage = 0
+  43:project.c     **** 	initialise_hardware();
+ 500               		.loc 1 43 0
+ 501 0000 0E94 0000 		call initialise_hardware
+  48:project.c     **** 	splash_screen();
+ 502               		.loc 1 48 0
+ 503 0004 0E94 0000 		call splash_screen
+  52:project.c     **** 		new_game();
+ 504               		.loc 1 52 0
+ 505 0008 0E94 0000 		call new_game
+  53:project.c     **** 		play_game();
+ 506               		.loc 1 53 0
+ 507 000c 0E94 0000 		call play_game
+ 508               	.L40:
+ 509 0010 00C0      		rjmp .L40
+ 510               		.cfi_endproc
+ 511               	.LFE1:
+ 513               		.text
+ 514               	.Letext0:
+ 515               		.file 2 "/usr/local/CrossPack-AVR-20130212/lib/gcc/avr/4.6.2/../../../../avr/include/stdint.h"
+ 516               		.file 3 "/usr/local/CrossPack-AVR-20130212/lib/gcc/avr/4.6.2/../../../../avr/include/stdio.h"
+DEFINED SYMBOLS
+                            *ABS*:00000000 project.c
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccw6jKgh.s:2      *ABS*:0000003f __SREG__
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccw6jKgh.s:3      *ABS*:0000003e __SP_H__
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccw6jKgh.s:4      *ABS*:0000003d __SP_L__
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccw6jKgh.s:5      *ABS*:00000034 __CCP__
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccw6jKgh.s:6      *ABS*:00000000 __tmp_reg__
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccw6jKgh.s:7      *ABS*:00000001 __zero_reg__
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccw6jKgh.s:15     .text:00000000 timer_activities
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccw6jKgh.s:36     .text:0000000a new_game
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccw6jKgh.s:64     .text:00000024 play_game
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccw6jKgh.s:308    .text:00000138 handle_game_over
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccw6jKgh.s:323    .text:0000013a initialise_hardware
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccw6jKgh.s:370    .text:00000164 splash_screen
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccw6jKgh.s:492    .text.startup:00000000 main
+
+UNDEFINED SYMBOLS
+__do_copy_data
+__do_clear_bss
+display_row
+check_keypad_column
+init_board
+copy_board_to_led_display
+init_score
+button_pushed
+keypad_button_pushed
+clear_serial_input_buffer
+get_clock_ticks
+have_current_piece
+attempt_drop_piece_one_row
+fix_piece_to_board
+add_random_piece
+__iob
+fgetc
+attempt_rotation
+attempt_move
+serial_input_available
+init_serial_stdio
+init_led_display
+init_keypad
+init_timer2
+init_external_interrupts
+clear_terminal
+move_cursor
+puts
+set_scrolling_display_text
+scroll_display

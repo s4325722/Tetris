@@ -1,0 +1,1 @@
+terminalio.o: terminalio.c

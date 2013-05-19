@@ -1,0 +1,108 @@
+   1               		.file	"score.c"
+   2               	__SREG__ = 0x3f
+   3               	__SP_H__ = 0x3e
+   4               	__SP_L__ = 0x3d
+   5               	__CCP__ = 0x34
+   6               	__tmp_reg__ = 0
+   7               	__zero_reg__ = 1
+   8               		.global __do_copy_data
+   9               		.global __do_clear_bss
+  10               		.text
+  11               	.Ltext0:
+  12               		.cfi_sections	.debug_frame
+  13               	.global	init_score
+  15               	init_score:
+  16               	.LFB0:
+  17               		.file 1 "score.c"
+   1:score.c       **** /*
+   2:score.c       ****  * score.c
+   3:score.c       ****  *
+   4:score.c       ****  * Written by Peter Sutton
+   5:score.c       ****  */
+   6:score.c       **** 
+   7:score.c       **** #include "score.h"
+   8:score.c       **** 
+   9:score.c       **** uint16_t score;
+  10:score.c       **** 
+  11:score.c       **** void init_score(void) {
+  18               		.loc 1 11 0
+  19               		.cfi_startproc
+  20               	/* prologue: function */
+  21               	/* frame size = 0 */
+  22               	/* stack size = 0 */
+  23               	.L__stack_usage = 0
+  12:score.c       **** 	score = 0;
+  24               		.loc 1 12 0
+  25 0000 1092 0000 		sts score+1,__zero_reg__
+  26 0004 1092 0000 		sts score,__zero_reg__
+  27               	/* epilogue start */
+  13:score.c       **** }
+  28               		.loc 1 13 0
+  29 0008 0895      		ret
+  30               		.cfi_endproc
+  31               	.LFE0:
+  33               	.global	add_to_score
+  35               	add_to_score:
+  36               	.LFB1:
+  14:score.c       **** 
+  15:score.c       **** void add_to_score(uint16_t value) {
+  37               		.loc 1 15 0
+  38               		.cfi_startproc
+  39               	.LVL0:
+  40               	/* prologue: function */
+  41               	/* frame size = 0 */
+  42               	/* stack size = 0 */
+  43               	.L__stack_usage = 0
+  16:score.c       **** 	score += value;
+  44               		.loc 1 16 0
+  45 000a 2091 0000 		lds r18,score
+  46 000e 3091 0000 		lds r19,score+1
+  47 0012 280F      		add r18,r24
+  48 0014 391F      		adc r19,r25
+  49 0016 3093 0000 		sts score+1,r19
+  50 001a 2093 0000 		sts score,r18
+  51               	/* epilogue start */
+  17:score.c       **** }
+  52               		.loc 1 17 0
+  53 001e 0895      		ret
+  54               		.cfi_endproc
+  55               	.LFE1:
+  57               	.global	get_score
+  59               	get_score:
+  60               	.LFB2:
+  18:score.c       **** 
+  19:score.c       **** uint16_t get_score(void) {
+  61               		.loc 1 19 0
+  62               		.cfi_startproc
+  63               	/* prologue: function */
+  64               	/* frame size = 0 */
+  65               	/* stack size = 0 */
+  66               	.L__stack_usage = 0
+  20:score.c       **** 	return score;
+  21:score.c       **** }
+  67               		.loc 1 21 0
+  68 0020 8091 0000 		lds r24,score
+  69 0024 9091 0000 		lds r25,score+1
+  70               	/* epilogue start */
+  71 0028 0895      		ret
+  72               		.cfi_endproc
+  73               	.LFE2:
+  75               		.comm score,2,1
+  76               	.Letext0:
+  77               		.file 2 "/usr/local/CrossPack-AVR-20130212/lib/gcc/avr/4.6.2/../../../../avr/include/stdint.h"
+DEFINED SYMBOLS
+                            *ABS*:00000000 score.c
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccKIftUL.s:2      *ABS*:0000003f __SREG__
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccKIftUL.s:3      *ABS*:0000003e __SP_H__
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccKIftUL.s:4      *ABS*:0000003d __SP_L__
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccKIftUL.s:5      *ABS*:00000034 __CCP__
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccKIftUL.s:6      *ABS*:00000000 __tmp_reg__
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccKIftUL.s:7      *ABS*:00000001 __zero_reg__
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccKIftUL.s:15     .text:00000000 init_score
+                            *COM*:00000002 score
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccKIftUL.s:35     .text:0000000a add_to_score
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccKIftUL.s:59     .text:00000020 get_score
+
+UNDEFINED SYMBOLS
+__do_copy_data
+__do_clear_bss

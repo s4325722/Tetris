@@ -1,0 +1,192 @@
+   1               		.file	"led_display.c"
+   2               	__SREG__ = 0x3f
+   3               	__SP_H__ = 0x3e
+   4               	__SP_L__ = 0x3d
+   5               	__CCP__ = 0x34
+   6               	__tmp_reg__ = 0
+   7               	__zero_reg__ = 1
+   8               		.global __do_copy_data
+   9               		.global __do_clear_bss
+  10               		.text
+  11               	.Ltext0:
+  12               		.cfi_sections	.debug_frame
+  13               	.global	init_led_display
+  15               	init_led_display:
+  16               	.LFB0:
+  17               		.file 1 "led_display.c"
+   1:led_display.c **** /*
+   2:led_display.c ****  * led_display.c
+   3:led_display.c ****  *
+   4:led_display.c ****  * Written by Peter Sutton.
+   5:led_display.c ****  *
+   6:led_display.c ****  * Module that implements our LED display.
+   7:led_display.c ****  *
+   8:led_display.c ****  */
+   9:led_display.c **** 
+  10:led_display.c **** #ifdef AVR
+  11:led_display.c **** #include <avr/io.h>
+  12:led_display.c **** #else
+  13:led_display.c **** #include <stdio.h>
+  14:led_display.c **** #include "terminalio.h"
+  15:led_display.c **** #endif
+  16:led_display.c **** 
+  17:led_display.c **** #include "led_display.h"
+  18:led_display.c **** 
+  19:led_display.c **** /* Global variable - see comment in header file */
+  20:led_display.c **** volatile uint16_t display[NUM_ROWS];
+  21:led_display.c **** 
+  22:led_display.c **** void init_led_display(void) {
+  18               		.loc 1 22 0
+  19               		.cfi_startproc
+  20               	/* prologue: function */
+  21               	/* frame size = 0 */
+  22               	/* stack size = 0 */
+  23               	.L__stack_usage = 0
+  23:led_display.c **** 	uint8_t i;
+  24:led_display.c **** #ifdef AVR
+  25:led_display.c **** 
+  26:led_display.c **** 	/* Set ports A and C to be outputs (except most significant
+  27:led_display.c **** 	 * bit of port C) 
+  28:led_display.c **** 	 */
+  29:led_display.c **** 	DDRA = 0xFF;
+  24               		.loc 1 29 0
+  25 0000 8FEF      		ldi r24,lo8(-1)
+  26 0002 8ABB      		out 58-32,r24
+  30:led_display.c **** 	DDRC = 0x7F;
+  27               		.loc 1 30 0
+  28 0004 8FE7      		ldi r24,lo8(127)
+  29 0006 84BB      		out 52-32,r24
+  31:led_display.c **** 
+  32:led_display.c **** 	/* Set 3 least significant bits of G to be outputs */
+  33:led_display.c **** 	DDRG = 0x07;
+  30               		.loc 1 33 0
+  31 0008 87E0      		ldi r24,lo8(7)
+  32 000a 8093 6400 		sts 100,r24
+  33               	.LVL0:
+  34:led_display.c **** #endif
+  35:led_display.c **** 
+  36:led_display.c **** 	/* Empty the display */
+  37:led_display.c **** 	for(i=0; i<NUM_ROWS; i++) {
+  38:led_display.c **** 		display[i] = 0;
+  34               		.loc 1 38 0
+  35 000e 1092 0000 		sts display+1,__zero_reg__
+  36 0012 1092 0000 		sts display,__zero_reg__
+  37               	.LVL1:
+  38 0016 1092 0000 		sts display+2+1,__zero_reg__
+  39 001a 1092 0000 		sts display+2,__zero_reg__
+  40               	.LVL2:
+  41 001e 1092 0000 		sts display+4+1,__zero_reg__
+  42 0022 1092 0000 		sts display+4,__zero_reg__
+  43               	.LVL3:
+  44 0026 1092 0000 		sts display+6+1,__zero_reg__
+  45 002a 1092 0000 		sts display+6,__zero_reg__
+  46               	.LVL4:
+  47 002e 1092 0000 		sts display+8+1,__zero_reg__
+  48 0032 1092 0000 		sts display+8,__zero_reg__
+  49               	.LVL5:
+  50 0036 1092 0000 		sts display+10+1,__zero_reg__
+  51 003a 1092 0000 		sts display+10,__zero_reg__
+  52               	.LVL6:
+  53 003e 1092 0000 		sts display+12+1,__zero_reg__
+  54 0042 1092 0000 		sts display+12,__zero_reg__
+  55               	.LVL7:
+  56               	/* epilogue start */
+  39:led_display.c **** 	}
+  40:led_display.c **** }
+  57               		.loc 1 40 0
+  58 0046 0895      		ret
+  59               		.cfi_endproc
+  60               	.LFE0:
+  62               	.global	display_row
+  64               	display_row:
+  65               	.LFB1:
+  41:led_display.c **** 
+  42:led_display.c **** void display_row(void) {	
+  66               		.loc 1 42 0
+  67               		.cfi_startproc
+  68               	/* prologue: function */
+  69               	/* frame size = 0 */
+  70               	/* stack size = 0 */
+  71               	.L__stack_usage = 0
+  43:led_display.c **** #ifdef AVR
+  44:led_display.c **** 	/* Keep track of the row number we're up to. ("static" 
+  45:led_display.c **** 	 * indicates that the variable value will be remembered 
+  46:led_display.c **** 	 * from one function execution to the next.)
+  47:led_display.c **** 	 */
+  48:led_display.c **** 	static uint8_t row = 0;
+  49:led_display.c **** 
+  50:led_display.c **** 	/* Increment our row number (and wrap around if necessary) */
+  51:led_display.c **** 	if(++row == NUM_ROWS) {
+  72               		.loc 1 51 0
+  73 0048 8091 0000 		lds r24,row.1284
+  74 004c 8F5F      		subi r24,lo8(-(1))
+  75 004e 8093 0000 		sts row.1284,r24
+  76 0052 8730      		cpi r24,lo8(7)
+  77 0054 01F4      		brne .L3
+  52:led_display.c **** 		row = 0;
+  78               		.loc 1 52 0
+  79 0056 1092 0000 		sts row.1284,__zero_reg__
+  80               	.L3:
+  53:led_display.c **** 	}
+  54:led_display.c **** 
+  55:led_display.c **** 	/* Output our row number to port G. This assumes the other 
+  56:led_display.c **** 	 * bits of port G are not being used. If they are, then
+  57:led_display.c **** 	 * this line of code needs to be changed.
+  58:led_display.c **** 	 */
+  59:led_display.c **** 	PORTG = row;
+  81               		.loc 1 59 0
+  82 005a E091 0000 		lds r30,row.1284
+  83 005e E093 6500 		sts 101,r30
+  60:led_display.c **** 
+  61:led_display.c **** 	/* Output the correct row data to ports A and C. (Port C gets
+  62:led_display.c **** 	 * the high byte, port A gets the low byte.) We need to invert
+  63:led_display.c **** 	 * the data since we need a low output for the LED to be lit. 
+  64:led_display.c **** 	 * Note - most significant bit is not displayed/used.
+  65:led_display.c **** 	 */
+  66:led_display.c **** 	PORTA = ~(uint8_t)(display[row] & 0xFF);
+  84               		.loc 1 66 0
+  85 0062 F0E0      		ldi r31,lo8(0)
+  86 0064 EE0F      		lsl r30
+  87 0066 FF1F      		rol r31
+  88 0068 E050      		subi r30,lo8(-(display))
+  89 006a F040      		sbci r31,hi8(-(display))
+  90 006c 8081      		ld r24,Z
+  91 006e 9181      		ldd r25,Z+1
+  92 0070 8095      		com r24
+  93 0072 8BBB      		out 59-32,r24
+  67:led_display.c **** 	PORTC = ~(uint8_t)((display[row] >> 8)& 0x7F);
+  94               		.loc 1 67 0
+  95 0074 8081      		ld r24,Z
+  96 0076 9181      		ldd r25,Z+1
+  97 0078 892F      		mov r24,r25
+  98 007a 8F77      		andi r24,lo8(127)
+  99 007c 8095      		com r24
+ 100 007e 85BB      		out 53-32,r24
+ 101               	/* epilogue start */
+  68:led_display.c **** #endif
+  69:led_display.c **** }
+ 102               		.loc 1 69 0
+ 103 0080 0895      		ret
+ 104               		.cfi_endproc
+ 105               	.LFE1:
+ 107               		.comm display,14,1
+ 108               		.lcomm row.1284,1
+ 109               	.Letext0:
+ 110               		.file 2 "/usr/local/CrossPack-AVR-20130212/lib/gcc/avr/4.6.2/../../../../avr/include/stdint.h"
+ 111               		.file 3 "led_display.h"
+DEFINED SYMBOLS
+                            *ABS*:00000000 led_display.c
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccV8xjuo.s:2      *ABS*:0000003f __SREG__
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccV8xjuo.s:3      *ABS*:0000003e __SP_H__
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccV8xjuo.s:4      *ABS*:0000003d __SP_L__
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccV8xjuo.s:5      *ABS*:00000034 __CCP__
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccV8xjuo.s:6      *ABS*:00000000 __tmp_reg__
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccV8xjuo.s:7      *ABS*:00000001 __zero_reg__
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccV8xjuo.s:15     .text:00000000 init_led_display
+                            *COM*:0000000e display
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccV8xjuo.s:64     .text:00000048 display_row
+                             .bss:00000000 row.1284
+
+UNDEFINED SYMBOLS
+__do_copy_data
+__do_clear_bss

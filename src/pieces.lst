@@ -1,0 +1,740 @@
+   1               		.file	"pieces.c"
+   2               	__SREG__ = 0x3f
+   3               	__SP_H__ = 0x3e
+   4               	__SP_L__ = 0x3d
+   5               	__CCP__ = 0x34
+   6               	__tmp_reg__ = 0
+   7               	__zero_reg__ = 1
+   8               		.global __do_copy_data
+   9               		.global __do_clear_bss
+  10               		.text
+  11               	.Ltext0:
+  12               		.cfi_sections	.debug_frame
+  13               	.global	copy_piece
+  15               	copy_piece:
+  16               	.LFB1:
+  17               		.file 1 "pieces.c"
+   1:pieces.c      **** /*
+   2:pieces.c      ****  * pieces.c
+   3:pieces.c      ****  *
+   4:pieces.c      ****  * Written by Peter Sutton.
+   5:pieces.c      ****  */
+   6:pieces.c      **** 
+   7:pieces.c      **** #include "pieces.h"
+   8:pieces.c      **** #include "board.h"
+   9:pieces.c      **** #include <stdlib.h>
+  10:pieces.c      **** /* Stdlib needed for rand() - random number generator */
+  11:pieces.c      **** 
+  12:pieces.c      **** 
+  13:pieces.c      **** /*
+  14:pieces.c      ****  * Define the piece library. Rows are defined FROM THE BOTTOM UP.
+  15:pieces.c      ****  * The hexadecimal numbers below can be expressed diagrammatically
+  16:pieces.c      ****  * as below (* represents 1, _ represents 0). There are 5 pieces
+  17:pieces.c      ****  * defined for this version of the program.
+  18:pieces.c      ****  * NOTE. Pieces must not exceed MAX_PIECE_DIMENSION in either dimension.
+  19:pieces.c      ****  * NOTE: Pieces must be right aligned and bottom aligned 
+  20:pieces.c      ****  * NOTE: piece_type is defined in pieces.h
+  21:pieces.c      **** */
+  22:pieces.c      **** #define NUM_PIECES_IN_LIBRARY 5
+  23:pieces.c      **** piece_type piece_library[NUM_PIECES_IN_LIBRARY] = {
+  24:pieces.c      **** 	{ {0x01, 0x00, 0x00}, 1, 1, 0},
+  25:pieces.c      **** 	{ {0x01, 0x01, 0x01}, 1, 3, 0},
+  26:pieces.c      **** 	{ {0x03, 0x03, 0x00}, 2, 2, 0},
+  27:pieces.c      **** 	{ {0x07, 0x04, 0x00}, 3, 2, 0},
+  28:pieces.c      **** 	{ {0x07, 0x02, 0x00}, 3, 2, 0}};
+  29:pieces.c      **** 	
+  30:pieces.c      **** /* GRAPHICAL REPRESENTATION
+  31:pieces.c      ****  * ____ = 0000 = 0x00
+  32:pieces.c      ****  * ____ = 0000 = 0x00
+  33:pieces.c      ****  * ___* = 0001 = 0x01
+  34:pieces.c      ****  *
+  35:pieces.c      ****  * ___* = 0001 = 0x01
+  36:pieces.c      ****  * ___* = 0001 = 0x01
+  37:pieces.c      ****  * ___* = 0001 = 0x01
+  38:pieces.c      ****  *
+  39:pieces.c      ****  * ____ = 0000 = 0x00
+  40:pieces.c      ****  * __** = 0011 = 0x03
+  41:pieces.c      ****  * __** = 0011 = 0x03
+  42:pieces.c      ****  * 
+  43:pieces.c      ****  * ____ = 0000 = 0x00
+  44:pieces.c      ****  * _*__ = 0100 = 0x04
+  45:pieces.c      ****  * _*** = 0111 = 0x07
+  46:pieces.c      ****  *
+  47:pieces.c      ****  * ____ = 0000 = 0x00
+  48:pieces.c      ****  * __*_ = 0010 = 0x02
+  49:pieces.c      ****  * _*** = 0111 = 0x07
+  50:pieces.c      ****  */
+  51:pieces.c      **** 	
+  52:pieces.c      **** 	
+  53:pieces.c      **** piece_type generate_random_piece(void) {
+  54:pieces.c      **** 	piece_type piece;
+  55:pieces.c      **** 	int8_t i;
+  56:pieces.c      **** 	int piece_num = rand() % NUM_PIECES_IN_LIBRARY;
+  57:pieces.c      **** 	piece = piece_library[piece_num];
+  58:pieces.c      **** 	
+  59:pieces.c      **** 	/* 
+  60:pieces.c      **** 	 * Rotate the piece 0, 90, 180 or 270 degrees - i.e. perform
+  61:pieces.c      **** 	 * 0 to 3 rotations  - generate a random number between 0
+  62:pieces.c      **** 	 * and 3 inclusive
+  63:pieces.c      **** 	 */
+  64:pieces.c      **** 	int num_rotations = rand() % 4;
+  65:pieces.c      **** 	for(i=0; i < num_rotations; i++) {
+  66:pieces.c      **** 		(void)rotate_piece(&piece);
+  67:pieces.c      **** 		/* We ignore the return value - doesn't matter
+  68:pieces.c      **** 		 * whether successful or not. (Will be unsuccessful
+  69:pieces.c      **** 		 * for those pieces taller than they are wide.)
+  70:pieces.c      **** 		 */
+  71:pieces.c      **** 	}
+  72:pieces.c      **** 	
+  73:pieces.c      **** 	/* Shift the piece a random number of bits to the left 
+  74:pieces.c      **** 	 * Update necessary rows in piece.rowdata[] and 
+  75:pieces.c      **** 	 * piece.right_column
+  76:pieces.c      **** 	 */
+  77:pieces.c      **** 	
+  78:pieces.c      **** 	/* YOUR CODE HERE */ 
+  79:pieces.c      **** 
+  80:pieces.c      **** 	return piece;
+  81:pieces.c      **** }
+  82:pieces.c      **** 
+  83:pieces.c      **** void copy_piece(piece_type* from, piece_type* to) {
+  18               		.loc 1 83 0
+  19               		.cfi_startproc
+  20               	.LVL0:
+  21               	/* prologue: function */
+  22               	/* frame size = 0 */
+  23               	/* stack size = 0 */
+  24               	.L__stack_usage = 0
+  25 0000 FC01      		movw r30,r24
+  26 0002 DB01      		movw r26,r22
+  27               	.LVL1:
+  84:pieces.c      **** 	int8_t row;
+  85:pieces.c      **** 	for(row=0; row < MAX_PIECE_DIMENSION; row++) {
+  86:pieces.c      **** 		to->rowdata[row] = from->rowdata[row];
+  28               		.loc 1 86 0
+  29 0004 8081      		ld r24,Z
+  30               	.LVL2:
+  31 0006 8C93      		st X,r24
+  32               	.LVL3:
+  33 0008 8181      		ldd r24,Z+1
+  34 000a 1196      		adiw r26,1
+  35 000c 8C93      		st X,r24
+  36 000e 1197      		sbiw r26,1
+  37               	.LVL4:
+  38 0010 8281      		ldd r24,Z+2
+  39 0012 1296      		adiw r26,2
+  40 0014 8C93      		st X,r24
+  41 0016 1297      		sbiw r26,2
+  42               	.LVL5:
+  87:pieces.c      **** 	}
+  88:pieces.c      **** 	to->x_dimension = from->x_dimension;
+  43               		.loc 1 88 0
+  44 0018 8381      		ldd r24,Z+3
+  45 001a 1396      		adiw r26,3
+  46 001c 8C93      		st X,r24
+  47 001e 1397      		sbiw r26,3
+  89:pieces.c      **** 	to->y_dimension = from->y_dimension;
+  48               		.loc 1 89 0
+  49 0020 8481      		ldd r24,Z+4
+  50 0022 1496      		adiw r26,4
+  51 0024 8C93      		st X,r24
+  52 0026 1497      		sbiw r26,4
+  90:pieces.c      **** 	to->right_column = from->right_column;
+  53               		.loc 1 90 0
+  54 0028 8581      		ldd r24,Z+5
+  55 002a 1596      		adiw r26,5
+  56 002c 8C93      		st X,r24
+  57 002e 1597      		sbiw r26,5
+  58               	/* epilogue start */
+  91:pieces.c      **** }
+  59               		.loc 1 91 0
+  60 0030 0895      		ret
+  61               		.cfi_endproc
+  62               	.LFE1:
+  64               	.global	rotate_piece
+  66               	rotate_piece:
+  67               	.LFB2:
+  92:pieces.c      **** 
+  93:pieces.c      **** /*
+  94:pieces.c      ****  * Attempt to rotate the given piece clockwise by 90 degrees.
+  95:pieces.c      ****  * Returns 1 if successful (and modifies the given piece) otherwise
+  96:pieces.c      ****  * returns 0 (and leaves the given piece unchanged).
+  97:pieces.c      ****  * This method is only unsuccessful if the piece is too close to the
+  98:pieces.c      ****  * left hand side to be rotated.
+  99:pieces.c      ****  */
+ 100:pieces.c      **** int8_t rotate_piece(piece_type* piecePtr) {
+  68               		.loc 1 100 0
+  69               		.cfi_startproc
+  70               	.LVL6:
+  71 0032 6F92      		push r6
+  72               	.LCFI0:
+  73               		.cfi_def_cfa_offset 3
+  74               		.cfi_offset 6, -2
+  75 0034 7F92      		push r7
+  76               	.LCFI1:
+  77               		.cfi_def_cfa_offset 4
+  78               		.cfi_offset 7, -3
+  79 0036 8F92      		push r8
+  80               	.LCFI2:
+  81               		.cfi_def_cfa_offset 5
+  82               		.cfi_offset 8, -4
+  83 0038 9F92      		push r9
+  84               	.LCFI3:
+  85               		.cfi_def_cfa_offset 6
+  86               		.cfi_offset 9, -5
+  87 003a AF92      		push r10
+  88               	.LCFI4:
+  89               		.cfi_def_cfa_offset 7
+  90               		.cfi_offset 10, -6
+  91 003c BF92      		push r11
+  92               	.LCFI5:
+  93               		.cfi_def_cfa_offset 8
+  94               		.cfi_offset 11, -7
+  95 003e CF92      		push r12
+  96               	.LCFI6:
+  97               		.cfi_def_cfa_offset 9
+  98               		.cfi_offset 12, -8
+  99 0040 DF92      		push r13
+ 100               	.LCFI7:
+ 101               		.cfi_def_cfa_offset 10
+ 102               		.cfi_offset 13, -9
+ 103 0042 EF92      		push r14
+ 104               	.LCFI8:
+ 105               		.cfi_def_cfa_offset 11
+ 106               		.cfi_offset 14, -10
+ 107 0044 FF92      		push r15
+ 108               	.LCFI9:
+ 109               		.cfi_def_cfa_offset 12
+ 110               		.cfi_offset 15, -11
+ 111 0046 0F93      		push r16
+ 112               	.LCFI10:
+ 113               		.cfi_def_cfa_offset 13
+ 114               		.cfi_offset 16, -12
+ 115 0048 1F93      		push r17
+ 116               	.LCFI11:
+ 117               		.cfi_def_cfa_offset 14
+ 118               		.cfi_offset 17, -13
+ 119 004a CF93      		push r28
+ 120               	.LCFI12:
+ 121               		.cfi_def_cfa_offset 15
+ 122               		.cfi_offset 28, -14
+ 123 004c DF93      		push r29
+ 124               	.LCFI13:
+ 125               		.cfi_def_cfa_offset 16
+ 126               		.cfi_offset 29, -15
+ 127 004e 00D0      		rcall .
+ 128 0050 00D0      		rcall .
+ 129 0052 00D0      		rcall .
+ 130               	.LCFI14:
+ 131               		.cfi_def_cfa_offset 22
+ 132 0054 CDB7      		in r28,__SP_L__
+ 133 0056 DEB7      		in r29,__SP_H__
+ 134               	.LCFI15:
+ 135               		.cfi_def_cfa_register 28
+ 136               	/* prologue: function */
+ 137               	/* frame size = 6 */
+ 138               	/* stack size = 20 */
+ 139               	.L__stack_usage = 20
+ 140 0058 FC01      		movw r30,r24
+ 101:pieces.c      **** 	/*
+ 102:pieces.c      **** 	 * We calculate what the rotated piece would look like, 
+ 103:pieces.c      **** 	 */
+ 104:pieces.c      **** 	piece_type rotated;
+ 105:pieces.c      **** 	int8_t row, col, new_row, new_col;
+ 106:pieces.c      **** 	unsigned char bit_to_copy;
+ 107:pieces.c      **** 	
+ 108:pieces.c      **** 	/*
+ 109:pieces.c      **** 	 * First check if rotation would cause the piece to be off 
+ 110:pieces.c      **** 	 * the board. (This only happens if the piece is taller than
+ 111:pieces.c      **** 	 * it is wide and is too close to the left hand side.)
+ 112:pieces.c      **** 	 */
+ 113:pieces.c      **** 	if(piecePtr->right_column + piecePtr->y_dimension > BOARD_WIDTH) {
+ 141               		.loc 1 113 0
+ 142 005a 3581      		ldd r19,Z+5
+ 143 005c C32E      		mov r12,r19
+ 144 005e DD24      		clr r13
+ 145 0060 2481      		ldd r18,Z+4
+ 146 0062 C601      		movw r24,r12
+ 147               	.LVL7:
+ 148 0064 820F      		add r24,r18
+ 149 0066 911D      		adc r25,__zero_reg__
+ 150 0068 8830      		cpi r24,8
+ 151 006a 9105      		cpc r25,__zero_reg__
+ 152 006c 04F0      		brlt .+2
+ 153 006e 00C0      		rjmp .L8
+ 114:pieces.c      **** 		return 0;
+ 115:pieces.c      **** 	}
+ 116:pieces.c      **** 	
+ 117:pieces.c      **** 	/*
+ 118:pieces.c      **** 	 * Initialise the rotated piece. (Swap X and Y dimensions.)
+ 119:pieces.c      **** 	 */
+ 120:pieces.c      **** 	rotated.x_dimension = piecePtr->y_dimension;
+ 154               		.loc 1 120 0
+ 155 0070 2C83      		std Y+4,r18
+ 121:pieces.c      **** 	rotated.y_dimension = piecePtr->x_dimension;
+ 156               		.loc 1 121 0
+ 157 0072 6381      		ldd r22,Z+3
+ 158 0074 6D83      		std Y+5,r22
+ 122:pieces.c      **** 	rotated.right_column = piecePtr->right_column;
+ 159               		.loc 1 122 0
+ 160 0076 3E83      		std Y+6,r19
+ 161               	.LVL8:
+ 123:pieces.c      **** 	for(row=0; row < MAX_PIECE_DIMENSION; row++) {
+ 124:pieces.c      **** 		rotated.rowdata[row] = 0;
+ 162               		.loc 1 124 0
+ 163 0078 1982      		std Y+1,__zero_reg__
+ 164               	.LVL9:
+ 165 007a 1A82      		std Y+2,__zero_reg__
+ 166               	.LVL10:
+ 167 007c 1B82      		std Y+3,__zero_reg__
+ 168               	.LVL11:
+ 169 007e 8F01      		movw r16,r30
+ 170 0080 2150      		subi r18,lo8(-(-1))
+ 171 0082 AE01      		movw r20,r28
+ 172 0084 4F5F      		subi r20,lo8(-(1))
+ 173 0086 5F4F      		sbci r21,hi8(-(1))
+ 100:pieces.c      **** int8_t rotate_piece(piece_type* piecePtr) {
+ 174               		.loc 1 100 0
+ 175 0088 4601      		movw r8,r12
+ 176 008a 841A      		sub r8,r20
+ 177 008c 950A      		sbc r9,r21
+ 178 008e 00C0      		rjmp .L4
+ 179               	.LVL12:
+ 180               	.L5:
+ 125:pieces.c      **** 	}
+ 126:pieces.c      **** 	
+ 127:pieces.c      **** 	/*
+ 128:pieces.c      **** 	 * Iterate over the rows of the existing piece - these
+ 129:pieces.c      **** 	 * become the columns of the rotated piece. col is a relative
+ 130:pieces.c      **** 	 * column position (from the rightmost bit of the piece).
+ 131:pieces.c      **** 	 */
+ 132:pieces.c      **** 	for(row=0; row < piecePtr->y_dimension; row++) {
+ 133:pieces.c      **** 		for(col=0; col < piecePtr->x_dimension; col++) {
+ 134:pieces.c      **** 			new_row = col;
+ 135:pieces.c      **** 			new_col = piecePtr->y_dimension - 1 - row;
+ 136:pieces.c      **** 			bit_to_copy = (piecePtr->rowdata[row] >> 
+ 181               		.loc 1 136 0 discriminator 2
+ 182 0090 D801      		movw r26,r16
+ 183 0092 EC90      		ld r14,X
+ 184 0094 FF24      		clr r15
+ 100:pieces.c      **** int8_t rotate_piece(piece_type* piecePtr) {
+ 185               		.loc 1 100 0 discriminator 2
+ 186 0096 C401      		movw r24,r8
+ 187 0098 860D      		add r24,r6
+ 188 009a 971D      		adc r25,r7
+ 189               		.loc 1 136 0 discriminator 2
+ 190 009c 00C0      		rjmp 2f
+ 191 009e F594      	1:	asr r15
+ 192 00a0 E794      		ror r14
+ 193 00a2 8A95      	2:	dec r24
+ 194 00a4 02F4      		brpl 1b
+ 195 00a6 8E2D      		mov r24,r14
+ 196 00a8 8170      		andi r24,lo8(1)
+ 137:pieces.c      **** 				(piecePtr->right_column + col)) & 0x01;
+ 138:pieces.c      **** 			rotated.rowdata[new_row] |= 
+ 139:pieces.c      **** 				bit_to_copy << (piecePtr->right_column + new_col);
+ 197               		.loc 1 139 0 discriminator 2
+ 198 00aa 90E0      		ldi r25,lo8(0)
+ 199 00ac 0A2C      		mov r0,r10
+ 200 00ae 00C0      		rjmp 2f
+ 201 00b0 880F      	1:	lsl r24
+ 202 00b2 991F      		rol r25
+ 203 00b4 0A94      	2:	dec r0
+ 204 00b6 02F4      		brpl 1b
+ 138:pieces.c      **** 			rotated.rowdata[new_row] |= 
+ 205               		.loc 1 138 0 discriminator 2
+ 206 00b8 D301      		movw r26,r6
+ 207 00ba 9C91      		ld r25,X
+ 208 00bc 982B      		or r25,r24
+ 209 00be 9D93      		st X+,r25
+ 210 00c0 3D01      		movw r6,r26
+ 133:pieces.c      **** 		for(col=0; col < piecePtr->x_dimension; col++) {
+ 211               		.loc 1 133 0 discriminator 2
+ 212 00c2 3F5F      		subi r19,lo8(-(1))
+ 213               	.LVL13:
+ 214               	.L7:
+ 133:pieces.c      **** 		for(col=0; col < piecePtr->x_dimension; col++) {
+ 215               		.loc 1 133 0 is_stmt 0 discriminator 1
+ 216 00c4 3617      		cp r19,r22
+ 217 00c6 01F4      		brne .L5
+ 133:pieces.c      **** 		for(col=0; col < piecePtr->x_dimension; col++) {
+ 218               		.loc 1 133 0
+ 219 00c8 0F5F      		subi r16,lo8(-(1))
+ 220 00ca 1F4F      		sbci r17,hi8(-(1))
+ 221 00cc 2150      		subi r18,lo8(-(-1))
+ 222               	.LVL14:
+ 223               	.L4:
+ 132:pieces.c      **** 	for(row=0; row < piecePtr->y_dimension; row++) {
+ 224               		.loc 1 132 0 is_stmt 1 discriminator 1
+ 225 00ce 2F3F      		cpi r18,lo8(-1)
+ 226 00d0 01F0      		breq .L6
+ 132:pieces.c      **** 	for(row=0; row < piecePtr->y_dimension; row++) {
+ 227               		.loc 1 132 0 is_stmt 0
+ 228 00d2 3A01      		movw r6,r20
+ 100:pieces.c      **** int8_t rotate_piece(piece_type* piecePtr) {
+ 229               		.loc 1 100 0 is_stmt 1
+ 230 00d4 30E0      		ldi r19,lo8(0)
+ 231               		.loc 1 139 0
+ 232 00d6 A22E      		mov r10,r18
+ 233 00d8 BB24      		clr r11
+ 234 00da A7FC      		sbrc r10,7
+ 235 00dc B094      		com r11
+ 236 00de AC0C      		add r10,r12
+ 237 00e0 BD1C      		adc r11,r13
+ 238 00e2 00C0      		rjmp .L7
+ 239               	.L6:
+ 140:pieces.c      **** 		}
+ 141:pieces.c      **** 	}
+ 142:pieces.c      **** 
+ 143:pieces.c      **** 	/*
+ 144:pieces.c      **** 	 * Copy rotated data to original piece
+ 145:pieces.c      **** 	 */
+ 146:pieces.c      **** 	copy_piece(&rotated, piecePtr);
+ 240               		.loc 1 146 0
+ 241 00e4 CA01      		movw r24,r20
+ 242 00e6 BF01      		movw r22,r30
+ 243 00e8 0E94 0000 		call copy_piece
+ 244               	.LVL15:
+ 147:pieces.c      **** 	
+ 148:pieces.c      **** 	/* Indicate success */
+ 149:pieces.c      **** 	return 1;
+ 245               		.loc 1 149 0
+ 246 00ec 81E0      		ldi r24,lo8(1)
+ 247 00ee 00C0      		rjmp .L3
+ 248               	.LVL16:
+ 249               	.L8:
+ 114:pieces.c      **** 		return 0;
+ 250               		.loc 1 114 0
+ 251 00f0 80E0      		ldi r24,lo8(0)
+ 252               	.LVL17:
+ 253               	.L3:
+ 254               	/* epilogue start */
+ 150:pieces.c      **** }
+ 255               		.loc 1 150 0
+ 256 00f2 2696      		adiw r28,6
+ 257 00f4 0FB6      		in __tmp_reg__,__SREG__
+ 258 00f6 F894      		cli
+ 259 00f8 DEBF      		out __SP_H__,r29
+ 260 00fa 0FBE      		out __SREG__,__tmp_reg__
+ 261 00fc CDBF      		out __SP_L__,r28
+ 262 00fe DF91      		pop r29
+ 263 0100 CF91      		pop r28
+ 264 0102 1F91      		pop r17
+ 265 0104 0F91      		pop r16
+ 266 0106 FF90      		pop r15
+ 267 0108 EF90      		pop r14
+ 268 010a DF90      		pop r13
+ 269 010c CF90      		pop r12
+ 270 010e BF90      		pop r11
+ 271 0110 AF90      		pop r10
+ 272 0112 9F90      		pop r9
+ 273 0114 8F90      		pop r8
+ 274 0116 7F90      		pop r7
+ 275 0118 6F90      		pop r6
+ 276 011a 0895      		ret
+ 277               		.cfi_endproc
+ 278               	.LFE2:
+ 280               	.global	generate_random_piece
+ 282               	generate_random_piece:
+ 283               	.LFB0:
+  53:pieces.c      **** piece_type generate_random_piece(void) {
+ 284               		.loc 1 53 0
+ 285               		.cfi_startproc
+ 286 011c EF92      		push r14
+ 287               	.LCFI16:
+ 288               		.cfi_def_cfa_offset 3
+ 289               		.cfi_offset 14, -2
+ 290 011e FF92      		push r15
+ 291               	.LCFI17:
+ 292               		.cfi_def_cfa_offset 4
+ 293               		.cfi_offset 15, -3
+ 294 0120 0F93      		push r16
+ 295               	.LCFI18:
+ 296               		.cfi_def_cfa_offset 5
+ 297               		.cfi_offset 16, -4
+ 298 0122 1F93      		push r17
+ 299               	.LCFI19:
+ 300               		.cfi_def_cfa_offset 6
+ 301               		.cfi_offset 17, -5
+ 302 0124 CF93      		push r28
+ 303               	.LCFI20:
+ 304               		.cfi_def_cfa_offset 7
+ 305               		.cfi_offset 28, -6
+ 306 0126 DF93      		push r29
+ 307               	.LCFI21:
+ 308               		.cfi_def_cfa_offset 8
+ 309               		.cfi_offset 29, -7
+ 310 0128 CDB7      		in r28,__SP_L__
+ 311 012a DEB7      		in r29,__SP_H__
+ 312 012c 2C97      		sbiw r28,12
+ 313               	.LCFI22:
+ 314               		.cfi_def_cfa 28, 20
+ 315 012e 0FB6      		in __tmp_reg__,__SREG__
+ 316 0130 F894      		cli
+ 317 0132 DEBF      		out __SP_H__,r29
+ 318 0134 0FBE      		out __SREG__,__tmp_reg__
+ 319 0136 CDBF      		out __SP_L__,r28
+ 320               	/* prologue: function */
+ 321               	/* frame size = 12 */
+ 322               	/* stack size = 18 */
+ 323               	.L__stack_usage = 18
+  56:pieces.c      **** 	int piece_num = rand() % NUM_PIECES_IN_LIBRARY;
+ 324               		.loc 1 56 0
+ 325 0138 0E94 0000 		call rand
+ 326               	.LVL18:
+ 327 013c 65E0      		ldi r22,lo8(5)
+ 328 013e 70E0      		ldi r23,hi8(5)
+ 329 0140 0E94 0000 		call __divmodhi4
+ 330               	.LVL19:
+  57:pieces.c      **** 	piece = piece_library[piece_num];
+ 331               		.loc 1 57 0
+ 332 0144 FC01      		movw r30,r24
+ 333 0146 EE0F      		lsl r30
+ 334 0148 FF1F      		rol r31
+ 335 014a E80F      		add r30,r24
+ 336 014c F91F      		adc r31,r25
+ 337 014e EE0F      		lsl r30
+ 338 0150 FF1F      		rol r31
+ 339 0152 DE01      		movw r26,r28
+ 340 0154 1796      		adiw r26,7
+ 341 0156 E050      		subi r30,lo8(-(piece_library))
+ 342 0158 F040      		sbci r31,hi8(-(piece_library))
+ 343 015a 86E0      		ldi r24,lo8(6)
+ 344               	.LVL20:
+ 345               	.L10:
+ 346 015c 0190      		ld r0,Z+
+ 347 015e 0D92      		st X+,r0
+ 348 0160 8150      		subi r24,lo8(-(-1))
+ 349 0162 01F4      		brne .L10
+  64:pieces.c      **** 	int num_rotations = rand() % 4;
+ 350               		.loc 1 64 0
+ 351 0164 0E94 0000 		call rand
+ 352 0168 64E0      		ldi r22,lo8(4)
+ 353 016a 70E0      		ldi r23,hi8(4)
+ 354 016c 0E94 0000 		call __divmodhi4
+ 355 0170 7C01      		movw r14,r24
+ 356               	.LVL21:
+  65:pieces.c      **** 	for(i=0; i < num_rotations; i++) {
+ 357               		.loc 1 65 0
+ 358 0172 00E0      		ldi r16,lo8(0)
+ 359 0174 10E0      		ldi r17,hi8(0)
+ 360 0176 00C0      		rjmp .L11
+ 361               	.LVL22:
+ 362               	.L12:
+  66:pieces.c      **** 		(void)rotate_piece(&piece);
+ 363               		.loc 1 66 0 discriminator 2
+ 364 0178 CE01      		movw r24,r28
+ 365 017a 0796      		adiw r24,7
+ 366 017c 0E94 0000 		call rotate_piece
+ 367 0180 0F5F      		subi r16,lo8(-(1))
+ 368 0182 1F4F      		sbci r17,hi8(-(1))
+ 369               	.L11:
+  65:pieces.c      **** 	for(i=0; i < num_rotations; i++) {
+ 370               		.loc 1 65 0 discriminator 1
+ 371 0184 0E15      		cp r16,r14
+ 372 0186 1F05      		cpc r17,r15
+ 373 0188 04F0      		brlt .L12
+  80:pieces.c      **** 	return piece;
+ 374               		.loc 1 80 0
+ 375 018a DE01      		movw r26,r28
+ 376 018c 1196      		adiw r26,1
+ 377 018e FE01      		movw r30,r28
+ 378 0190 3796      		adiw r30,7
+ 379 0192 86E0      		ldi r24,lo8(6)
+ 380               	.L13:
+ 381 0194 0190      		ld r0,Z+
+ 382 0196 0D92      		st X+,r0
+ 383 0198 8150      		subi r24,lo8(-(-1))
+ 384 019a 01F4      		brne .L13
+ 385 019c 2981      		ldd r18,Y+1
+ 386 019e 3A81      		ldd r19,Y+2
+ 387 01a0 4B81      		ldd r20,Y+3
+ 388 01a2 5C81      		ldd r21,Y+4
+ 389 01a4 6D81      		ldd r22,Y+5
+ 390 01a6 7E81      		ldd r23,Y+6
+  81:pieces.c      **** }
+ 391               		.loc 1 81 0
+ 392 01a8 90E0      		ldi r25,lo8(0)
+ 393               	/* epilogue start */
+ 394 01aa 2C96      		adiw r28,12
+ 395 01ac 0FB6      		in __tmp_reg__,__SREG__
+ 396 01ae F894      		cli
+ 397 01b0 DEBF      		out __SP_H__,r29
+ 398 01b2 0FBE      		out __SREG__,__tmp_reg__
+ 399 01b4 CDBF      		out __SP_L__,r28
+ 400 01b6 DF91      		pop r29
+ 401 01b8 CF91      		pop r28
+ 402 01ba 1F91      		pop r17
+ 403 01bc 0F91      		pop r16
+ 404 01be FF90      		pop r15
+ 405 01c0 EF90      		pop r14
+ 406               	.LVL23:
+ 407 01c2 0895      		ret
+ 408               		.cfi_endproc
+ 409               	.LFE0:
+ 411               	.global	move_piece_left
+ 413               	move_piece_left:
+ 414               	.LFB3:
+ 151:pieces.c      **** 
+ 152:pieces.c      **** int8_t move_piece_left(piece_type* piecePtr) {
+ 415               		.loc 1 152 0
+ 416               		.cfi_startproc
+ 417               	.LVL24:
+ 418               	/* prologue: function */
+ 419               	/* frame size = 0 */
+ 420               	/* stack size = 0 */
+ 421               	.L__stack_usage = 0
+ 422 01c4 FC01      		movw r30,r24
+ 153:pieces.c      **** 	int8_t row;
+ 154:pieces.c      **** 	/*
+ 155:pieces.c      **** 	 * Check if piece is all the way to the left If so, return.
+ 156:pieces.c      **** 	 * (Remember, column number is based on bit position - higher
+ 157:pieces.c      **** 	 * numbers to the left.
+ 158:pieces.c      **** 	 */
+ 159:pieces.c      **** 	if(piecePtr->right_column + piecePtr->x_dimension >= BOARD_WIDTH) {
+ 423               		.loc 1 159 0
+ 424 01c6 2581      		ldd r18,Z+5
+ 425 01c8 8381      		ldd r24,Z+3
+ 426               	.LVL25:
+ 427 01ca 90E0      		ldi r25,lo8(0)
+ 428 01cc 820F      		add r24,r18
+ 429 01ce 911D      		adc r25,__zero_reg__
+ 430 01d0 8730      		cpi r24,7
+ 431 01d2 9105      		cpc r25,__zero_reg__
+ 432 01d4 04F4      		brge .L20
+ 433 01d6 DF01      		movw r26,r30
+ 152:pieces.c      **** int8_t move_piece_left(piece_type* piecePtr) {
+ 434               		.loc 1 152 0
+ 435 01d8 3481      		ldd r19,Z+4
+ 436 01da 80E0      		ldi r24,lo8(0)
+ 437 01dc 00C0      		rjmp .L18
+ 438               	.LVL26:
+ 439               	.L19:
+ 160:pieces.c      **** 		return 0;
+ 161:pieces.c      **** 	}
+ 162:pieces.c      **** 		
+ 163:pieces.c      **** 	/*
+ 164:pieces.c      **** 	 * Make the move.
+ 165:pieces.c      **** 	 */
+ 166:pieces.c      **** 	for(row=0; row < piecePtr->y_dimension; row++) {
+ 167:pieces.c      **** 		piecePtr->rowdata[row] <<= 1;
+ 440               		.loc 1 167 0 discriminator 2
+ 441 01de 9C91      		ld r25,X
+ 442 01e0 990F      		lsl r25
+ 443 01e2 9D93      		st X+,r25
+ 166:pieces.c      **** 	for(row=0; row < piecePtr->y_dimension; row++) {
+ 444               		.loc 1 166 0 discriminator 2
+ 445 01e4 8F5F      		subi r24,lo8(-(1))
+ 446               	.LVL27:
+ 447               	.L18:
+ 166:pieces.c      **** 	for(row=0; row < piecePtr->y_dimension; row++) {
+ 448               		.loc 1 166 0 is_stmt 0 discriminator 1
+ 449 01e6 8317      		cp r24,r19
+ 450 01e8 01F4      		brne .L19
+ 168:pieces.c      **** 	}
+ 169:pieces.c      **** 	piecePtr->right_column++;
+ 451               		.loc 1 169 0 is_stmt 1
+ 452 01ea 2F5F      		subi r18,lo8(-(1))
+ 453 01ec 2583      		std Z+5,r18
+ 170:pieces.c      **** 	return 1;
+ 454               		.loc 1 170 0
+ 455 01ee 81E0      		ldi r24,lo8(1)
+ 456               	.LVL28:
+ 457 01f0 0895      		ret
+ 458               	.L20:
+ 160:pieces.c      **** 		return 0;
+ 459               		.loc 1 160 0
+ 460 01f2 80E0      		ldi r24,lo8(0)
+ 171:pieces.c      **** }
+ 461               		.loc 1 171 0
+ 462 01f4 0895      		ret
+ 463               		.cfi_endproc
+ 464               	.LFE3:
+ 466               	.global	move_piece_right
+ 468               	move_piece_right:
+ 469               	.LFB4:
+ 172:pieces.c      **** 
+ 173:pieces.c      **** int8_t move_piece_right(piece_type* piecePtr) {
+ 470               		.loc 1 173 0
+ 471               		.cfi_startproc
+ 472               	.LVL29:
+ 473               	/* prologue: function */
+ 474               	/* frame size = 0 */
+ 475               	/* stack size = 0 */
+ 476               	.L__stack_usage = 0
+ 174:pieces.c      **** 	/* YOUR CODE HERE */
+ 175:pieces.c      **** 	
+ 176:pieces.c      **** 	/*
+ 177:pieces.c      **** 	 * You may wish to model it on move_piece_left above
+ 178:pieces.c      **** 	 * Your function must return 0 if it's unable to move (e.g.
+ 179:pieces.c      **** 	 * piece is against the right hand side), 1 otherwise.
+ 180:pieces.c      **** 	 */
+ 181:pieces.c      **** 	
+ 182:pieces.c      **** 	/*
+ 183:pieces.c      **** 	 * Initially, this function does nothing so we return 0
+ 184:pieces.c      **** 	 */
+ 185:pieces.c      **** 	return 0;
+ 186:pieces.c      **** }
+ 477               		.loc 1 186 0
+ 478 01f6 80E0      		ldi r24,lo8(0)
+ 479               	.LVL30:
+ 480               	/* epilogue start */
+ 481 01f8 0895      		ret
+ 482               		.cfi_endproc
+ 483               	.LFE4:
+ 485               	.global	piece_library
+ 486               		.data
+ 489               	piece_library:
+ 490 0000 01        		.byte	1
+ 491 0001 00        		.byte	0
+ 492 0002 00        		.byte	0
+ 493 0003 01        		.byte	1
+ 494 0004 01        		.byte	1
+ 495 0005 00        		.byte	0
+ 496 0006 01        		.byte	1
+ 497 0007 01        		.byte	1
+ 498 0008 01        		.byte	1
+ 499 0009 01        		.byte	1
+ 500 000a 03        		.byte	3
+ 501 000b 00        		.byte	0
+ 502 000c 03        		.byte	3
+ 503 000d 03        		.byte	3
+ 504 000e 00        		.byte	0
+ 505 000f 02        		.byte	2
+ 506 0010 02        		.byte	2
+ 507 0011 00        		.byte	0
+ 508 0012 07        		.byte	7
+ 509 0013 04        		.byte	4
+ 510 0014 00        		.byte	0
+ 511 0015 03        		.byte	3
+ 512 0016 02        		.byte	2
+ 513 0017 00        		.byte	0
+ 514 0018 07        		.byte	7
+ 515 0019 02        		.byte	2
+ 516 001a 00        		.byte	0
+ 517 001b 03        		.byte	3
+ 518 001c 02        		.byte	2
+ 519 001d 00        		.byte	0
+ 520               		.text
+ 521               	.Letext0:
+ 522               		.file 2 "/usr/local/CrossPack-AVR-20130212/lib/gcc/avr/4.6.2/../../../../avr/include/stdint.h"
+ 523               		.file 3 "pieces.h"
+DEFINED SYMBOLS
+                            *ABS*:00000000 pieces.c
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccya8HIZ.s:2      *ABS*:0000003f __SREG__
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccya8HIZ.s:3      *ABS*:0000003e __SP_H__
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccya8HIZ.s:4      *ABS*:0000003d __SP_L__
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccya8HIZ.s:5      *ABS*:00000034 __CCP__
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccya8HIZ.s:6      *ABS*:00000000 __tmp_reg__
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccya8HIZ.s:7      *ABS*:00000001 __zero_reg__
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccya8HIZ.s:15     .text:00000000 copy_piece
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccya8HIZ.s:66     .text:00000032 rotate_piece
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccya8HIZ.s:282    .text:0000011c generate_random_piece
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccya8HIZ.s:489    .data:00000000 piece_library
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccya8HIZ.s:413    .text:000001c4 move_piece_left
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccya8HIZ.s:468    .text:000001f6 move_piece_right
+
+UNDEFINED SYMBOLS
+__do_copy_data
+__do_clear_bss
+rand
+__divmodhi4

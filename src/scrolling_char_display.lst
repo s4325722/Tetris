@@ -1,0 +1,794 @@
+   1               		.file	"scrolling_char_display.c"
+   2               	__SREG__ = 0x3f
+   3               	__SP_H__ = 0x3e
+   4               	__SP_L__ = 0x3d
+   5               	__CCP__ = 0x34
+   6               	__tmp_reg__ = 0
+   7               	__zero_reg__ = 1
+   8               		.global __do_copy_data
+   9               		.global __do_clear_bss
+  10               		.text
+  11               	.Ltext0:
+  12               		.cfi_sections	.debug_frame
+  13               	.global	set_scrolling_display_text
+  15               	set_scrolling_display_text:
+  16               	.LFB1:
+  17               		.file 1 "scrolling_char_display.c"
+   1:scrolling_char_display.c **** /*
+   2:scrolling_char_display.c ****  * scrolling_char_display.c
+   3:scrolling_char_display.c ****  *
+   4:scrolling_char_display.c ****  * Written by Peter Sutton.
+   5:scrolling_char_display.c ****  *
+   6:scrolling_char_display.c ****  * This is an example of how the LED display board can be used. 
+   7:scrolling_char_display.c ****  * This program scrolls a message from right to left on the
+   8:scrolling_char_display.c ****  * board. The font used is defined below and is 7 dots high and
+   9:scrolling_char_display.c ****  * varies between 3 and 5 dots wide, depending on the character.
+  10:scrolling_char_display.c ****  * Letters and numbers can be handled (though lower case
+  11:scrolling_char_display.c ****  * letters are displayed as upper case). All other characters
+  12:scrolling_char_display.c ****  * display as a blank column.
+  13:scrolling_char_display.c ****  * 
+  14:scrolling_char_display.c ****  * The program also demonstrates how data can be stored in the
+  15:scrolling_char_display.c ****  * program (flash) memory, without also taking up space in RAM.
+  16:scrolling_char_display.c ****  * If the arrays below were defined in the normal C way, they
+  17:scrolling_char_display.c ****  * would take up space in both the program memory (where the
+  18:scrolling_char_display.c ****  * constants would be stored) and the RAM (where the values 
+  19:scrolling_char_display.c ****  * would be copied on start-up). The use of the PROGMEM attribute
+  20:scrolling_char_display.c ****  * and functions/macros like pgm_read_byte() means that the
+  21:scrolling_char_display.c ****  * constants can live just in the program memory and not be 
+  22:scrolling_char_display.c ****  * copied to RAM. (This saves several hundred bytes of RAM.)
+  23:scrolling_char_display.c ****  *
+  24:scrolling_char_display.c ****  */
+  25:scrolling_char_display.c **** 
+  26:scrolling_char_display.c **** #include "led_display.h"
+  27:scrolling_char_display.c **** #ifdef AVR
+  28:scrolling_char_display.c **** #include <avr/pgmspace.h>
+  29:scrolling_char_display.c **** #else
+  30:scrolling_char_display.c **** /* Non AVR - can't put constants in program memory */
+  31:scrolling_char_display.c **** #define PROGMEM
+  32:scrolling_char_display.c **** #define pgm_read_byte(addr) (*(addr))
+  33:scrolling_char_display.c **** #define pgm_read_word(addr) (*(addr))
+  34:scrolling_char_display.c **** #endif
+  35:scrolling_char_display.c **** 
+  36:scrolling_char_display.c **** /* FONT DEFINITION
+  37:scrolling_char_display.c ****  *
+  38:scrolling_char_display.c ****  * The following define the columns of data to be displayed
+  39:scrolling_char_display.c ****  * for each character (a-z and 0-9). The most significant
+  40:scrolling_char_display.c ****  * 7 bits (bit 7 to bit 1) represent the data for rows 0 to 6 
+  41:scrolling_char_display.c ****  * (top to bottom). The least significant bit is 1 only for
+  42:scrolling_char_display.c ****  * the last column of letter data. (This is how the software
+  43:scrolling_char_display.c ****  * will know when it has reached the last column for this 
+  44:scrolling_char_display.c ****  * character. For example, the data for
+  45:scrolling_char_display.c ****  * the 4 columns of letter A is as follows:
+  46:scrolling_char_display.c ****  * bit 7   * 
+  47:scrolling_char_display.c ****  * bit 6 *  *
+  48:scrolling_char_display.c ****  * bit 5 *  *
+  49:scrolling_char_display.c ****  * bit 4 ****
+  50:scrolling_char_display.c ****  * bit 3 *  *
+  51:scrolling_char_display.c ****  * bit 2 *  *
+  52:scrolling_char_display.c ****  * bit 1 *  *
+  53:scrolling_char_display.c ****  * bit 0    *
+  54:scrolling_char_display.c ****  */
+  55:scrolling_char_display.c **** 
+  56:scrolling_char_display.c **** /* Data for letters A-Z */
+  57:scrolling_char_display.c **** static const uint8_t cols_a[] PROGMEM = {126, 144, 144, 127};
+  58:scrolling_char_display.c **** static const uint8_t cols_b[] PROGMEM = {254, 146, 146, 109};
+  59:scrolling_char_display.c **** static const uint8_t cols_c[] PROGMEM = {124, 130, 130, 69};
+  60:scrolling_char_display.c **** static const uint8_t cols_d[] PROGMEM = {254, 130, 130, 125};
+  61:scrolling_char_display.c **** static const uint8_t cols_e[] PROGMEM = {254, 146, 146, 131};
+  62:scrolling_char_display.c **** static const uint8_t cols_f[] PROGMEM = {254, 144, 144, 129};
+  63:scrolling_char_display.c **** static const uint8_t cols_g[] PROGMEM = {124, 130, 146, 93};
+  64:scrolling_char_display.c **** static const uint8_t cols_h[] PROGMEM = {254, 16, 16, 255};
+  65:scrolling_char_display.c **** static const uint8_t cols_i[] PROGMEM = {130, 254, 131};
+  66:scrolling_char_display.c **** static const uint8_t cols_j[] PROGMEM = {4, 2, 2, 253};
+  67:scrolling_char_display.c **** static const uint8_t cols_k[] PROGMEM = {254, 16, 40, 199};
+  68:scrolling_char_display.c **** static const uint8_t cols_l[] PROGMEM = {254, 2, 2, 3};
+  69:scrolling_char_display.c **** static const uint8_t cols_m[] PROGMEM = {254, 64, 48, 64, 255};
+  70:scrolling_char_display.c **** static const uint8_t cols_n[] PROGMEM = {254, 32, 16, 255};
+  71:scrolling_char_display.c **** static const uint8_t cols_o[] PROGMEM = {124, 130, 130, 125};
+  72:scrolling_char_display.c **** static const uint8_t cols_p[] PROGMEM = {254, 144, 144, 97};
+  73:scrolling_char_display.c **** static const uint8_t cols_q[] PROGMEM = {124, 130, 138, 124, 3};
+  74:scrolling_char_display.c **** static const uint8_t cols_r[] PROGMEM = {254, 144, 152, 103};
+  75:scrolling_char_display.c **** static const uint8_t cols_s[] PROGMEM = {100, 146, 146, 77};
+  76:scrolling_char_display.c **** static const uint8_t cols_t[] PROGMEM = {128, 128, 254, 128, 129};
+  77:scrolling_char_display.c **** static const uint8_t cols_u[] PROGMEM = {252, 2, 2, 253};
+  78:scrolling_char_display.c **** static const uint8_t cols_v[] PROGMEM = {248, 4, 2, 4, 249};
+  79:scrolling_char_display.c **** static const uint8_t cols_w[] PROGMEM = {252, 2, 28, 2, 253};
+  80:scrolling_char_display.c **** static const uint8_t cols_x[] PROGMEM = {198, 40, 16, 40, 199};
+  81:scrolling_char_display.c **** static const uint8_t cols_y[] PROGMEM = {224, 16, 14, 16, 225};
+  82:scrolling_char_display.c **** static const uint8_t cols_z[] PROGMEM = {134, 138, 146, 162, 195};
+  83:scrolling_char_display.c **** 
+  84:scrolling_char_display.c **** /* Data for numbers 0 to 9 */
+  85:scrolling_char_display.c **** static const uint8_t cols_0[] PROGMEM = {124, 146, 162, 125};
+  86:scrolling_char_display.c **** static const uint8_t cols_1[] PROGMEM = {66, 254, 3};
+  87:scrolling_char_display.c **** static const uint8_t cols_2[] PROGMEM = {70, 138, 146, 99};
+  88:scrolling_char_display.c **** static const uint8_t cols_3[] PROGMEM = {68, 146, 146, 109};
+  89:scrolling_char_display.c **** static const uint8_t cols_4[] PROGMEM = {24, 40, 72, 255};
+  90:scrolling_char_display.c **** static const uint8_t cols_5[] PROGMEM = {228, 162, 162, 157};
+  91:scrolling_char_display.c **** static const uint8_t cols_6[] PROGMEM = {124, 146, 146, 77};
+  92:scrolling_char_display.c **** static const uint8_t cols_7[] PROGMEM = {128, 158, 160, 193};
+  93:scrolling_char_display.c **** static const uint8_t cols_8[] PROGMEM = {108, 146, 146, 109};
+  94:scrolling_char_display.c **** static const uint8_t cols_9[] PROGMEM = {100, 146, 146, 125};
+  95:scrolling_char_display.c **** 
+  96:scrolling_char_display.c **** /* The following two arrays point to the font data above. 
+  97:scrolling_char_display.c ****  * We store pointers to the beginning of the column data
+  98:scrolling_char_display.c ****  * for each letter 
+  99:scrolling_char_display.c **** */
+ 100:scrolling_char_display.c **** static const uint8_t* const letters[26] PROGMEM = {
+ 101:scrolling_char_display.c **** 		cols_a, cols_b, cols_c, cols_d, cols_e, cols_f,
+ 102:scrolling_char_display.c **** 		cols_g, cols_h, cols_i, cols_j, cols_k, cols_l,
+ 103:scrolling_char_display.c **** 		cols_m, cols_n, cols_o, cols_p, cols_q, cols_r, 
+ 104:scrolling_char_display.c **** 		cols_s, cols_t, cols_u, cols_v, cols_w, cols_x,
+ 105:scrolling_char_display.c **** 		cols_y, cols_z };
+ 106:scrolling_char_display.c **** 		
+ 107:scrolling_char_display.c **** static const uint8_t* const numbers[10] PROGMEM = {
+ 108:scrolling_char_display.c **** 		cols_0, cols_1, cols_2, cols_3, cols_4, 
+ 109:scrolling_char_display.c **** 		cols_5, cols_6, cols_7, cols_8, cols_9 };
+ 110:scrolling_char_display.c **** 
+ 111:scrolling_char_display.c **** /* Keep track of which column of data is next to be displayed. 
+ 112:scrolling_char_display.c ****  * next_col_ptr points to that column, or is 0 if there is
+ 113:scrolling_char_display.c ****  * no next column.
+ 114:scrolling_char_display.c ****  */
+ 115:scrolling_char_display.c **** static volatile const uint8_t* next_col_ptr = 0;
+ 116:scrolling_char_display.c **** 
+ 117:scrolling_char_display.c **** /* String to be displayed. 
+ 118:scrolling_char_display.c ****  * next_char_to_display will be used to point to the next
+ 119:scrolling_char_display.c ****  * character from this string to be displayed.
+ 120:scrolling_char_display.c ****  */
+ 121:scrolling_char_display.c **** static char* displayString;
+ 122:scrolling_char_display.c **** 
+ 123:scrolling_char_display.c **** static volatile char* next_char_to_display = 0;
+ 124:scrolling_char_display.c **** 
+ 125:scrolling_char_display.c **** /*
+ 126:scrolling_char_display.c ****  * Set the message to be displayed - we just copy the 
+ 127:scrolling_char_display.c ****  * pointer not the string it points to, so it is important
+ 128:scrolling_char_display.c ****  * that the original string not change after this function
+ 129:scrolling_char_display.c ****  * is called while the string is still being displayed.
+ 130:scrolling_char_display.c ****  */
+ 131:scrolling_char_display.c **** void set_scrolling_display_text(char* string_to_display) {
+  18               		.loc 1 131 0
+  19               		.cfi_startproc
+  20               	.LVL0:
+  21               	/* prologue: function */
+  22               	/* frame size = 0 */
+  23               	/* stack size = 0 */
+  24               	.L__stack_usage = 0
+ 132:scrolling_char_display.c **** 	displayString = string_to_display;
+  25               		.loc 1 132 0
+  26 0000 9093 0000 		sts displayString+1,r25
+  27 0004 8093 0000 		sts displayString,r24
+  28               	/* epilogue start */
+ 133:scrolling_char_display.c **** }
+  29               		.loc 1 133 0
+  30 0008 0895      		ret
+  31               		.cfi_endproc
+  32               	.LFE1:
+  34               	.global	scroll_display
+  36               	scroll_display:
+  37               	.LFB2:
+ 134:scrolling_char_display.c **** 
+ 135:scrolling_char_display.c **** /*
+ 136:scrolling_char_display.c ****  * Scroll the display. Should be called whenever the display
+ 137:scrolling_char_display.c ****  * is to be scrolled. It is assumed this happens much less
+ 138:scrolling_char_display.c ****  * frequently than display_row() is called. Note that this
+ 139:scrolling_char_display.c ****  * can be called from an interrupt service routine so any
+ 140:scrolling_char_display.c ****  * global variables accessed should be declared "volatile".
+ 141:scrolling_char_display.c ****  * Returns 1 if still scrolling display.
+ 142:scrolling_char_display.c ****  */
+ 143:scrolling_char_display.c **** uint8_t scroll_display(void) {
+  38               		.loc 1 143 0
+  39               		.cfi_startproc
+  40 000a CF93      		push r28
+  41               	.LCFI0:
+  42               		.cfi_def_cfa_offset 3
+  43               		.cfi_offset 28, -2
+  44 000c DF93      		push r29
+  45               	.LCFI1:
+  46               		.cfi_def_cfa_offset 4
+  47               		.cfi_offset 29, -3
+  48               	/* prologue: function */
+  49               	/* frame size = 0 */
+  50               	/* stack size = 2 */
+  51               	.L__stack_usage = 2
+  52               	.LVL1:
+ 144:scrolling_char_display.c **** 	uint8_t i;
+ 145:scrolling_char_display.c **** 	uint8_t col_data;
+ 146:scrolling_char_display.c **** 	char next_char;
+ 147:scrolling_char_display.c **** 	uint8_t finished = 0;
+ 148:scrolling_char_display.c **** 
+ 149:scrolling_char_display.c **** 	/* Data to be displayed in the next column - by 
+ 150:scrolling_char_display.c **** 	 * default we show a blank column. Bit 7 of this
+ 151:scrolling_char_display.c **** 	 * column data corresponds to row 0 of the display
+ 152:scrolling_char_display.c **** 	 * etc.
+ 153:scrolling_char_display.c **** 	 */
+ 154:scrolling_char_display.c **** 	col_data = 0;
+ 155:scrolling_char_display.c **** 
+ 156:scrolling_char_display.c **** 	if(next_col_ptr) {
+  53               		.loc 1 156 0
+  54 000e E091 0000 		lds r30,next_col_ptr
+  55 0012 F091 0000 		lds r31,next_col_ptr+1
+  56 0016 3097      		sbiw r30,0
+  57 0018 01F0      		breq .L3
+  58               	.LVL2:
+  59               	.LBB2:
+ 157:scrolling_char_display.c **** 		/* We're currently outputting a character and next_col_ptr
+ 158:scrolling_char_display.c **** 		 * points to the display data for the next column. We
+ 159:scrolling_char_display.c **** 		 * extract that data from program memory.
+ 160:scrolling_char_display.c **** 		 */
+ 161:scrolling_char_display.c **** 		col_data = pgm_read_byte(next_col_ptr);
+  60               		.loc 1 161 0
+  61               	/* #APP */
+  62               	 ;  161 "scrolling_char_display.c" 1
+  63 001a A491      		lpm r26, Z
+  64               		
+  65               	 ;  0 "" 2
+  66               	.LVL3:
+  67               	/* #NOAPP */
+  68               	.LBE2:
+ 162:scrolling_char_display.c **** 
+ 163:scrolling_char_display.c **** 		if(col_data & 1) {
+  69               		.loc 1 163 0
+  70 001c A0FF      		sbrs r26,0
+  71 001e 00C0      		rjmp .L4
+ 164:scrolling_char_display.c **** 			/* Least significant bit is set - this is the last
+ 165:scrolling_char_display.c **** 			 * column of this character
+ 166:scrolling_char_display.c **** 			 */
+ 167:scrolling_char_display.c **** 			next_col_ptr = 0;
+  72               		.loc 1 167 0
+  73 0020 1092 0000 		sts next_col_ptr+1,__zero_reg__
+  74 0024 1092 0000 		sts next_col_ptr,__zero_reg__
+  75 0028 00C0      		rjmp .L17
+  76               	.L4:
+ 168:scrolling_char_display.c **** 		} else {
+ 169:scrolling_char_display.c **** 			/* This is not the last column of this character - make
+ 170:scrolling_char_display.c **** 			 * the pointer point to the data for the next column.
+ 171:scrolling_char_display.c **** 			 */
+ 172:scrolling_char_display.c **** 			next_col_ptr++;
+  77               		.loc 1 172 0
+  78 002a 3196      		adiw r30,1
+  79 002c F093 0000 		sts next_col_ptr+1,r31
+  80 0030 E093 0000 		sts next_col_ptr,r30
+  81               	.L17:
+ 147:scrolling_char_display.c **** 	uint8_t finished = 0;
+  82               		.loc 1 147 0
+  83 0034 80E0      		ldi r24,lo8(0)
+  84 0036 00C0      		rjmp .L5
+  85               	.LVL4:
+  86               	.L3:
+ 173:scrolling_char_display.c **** 		}
+ 174:scrolling_char_display.c **** 	} else if(next_char_to_display) {
+  87               		.loc 1 174 0
+  88 0038 A091 0000 		lds r26,next_char_to_display
+  89 003c B091 0000 		lds r27,next_char_to_display+1
+  90 0040 1097      		sbiw r26,0
+  91 0042 01F0      		breq .L6
+ 175:scrolling_char_display.c **** 		/* We're not currently outputting a character, but we
+ 176:scrolling_char_display.c **** 		 * do have more characters to display. We will output
+ 177:scrolling_char_display.c **** 		 * a blank column this time (col_data value remains 0)
+ 178:scrolling_char_display.c **** 		 * but we will set up our pointer (next_col_ptr) so that
+ 179:scrolling_char_display.c **** 		 * it points to the data for the first column of dots for
+ 180:scrolling_char_display.c **** 		 * the next character. We first get the next character to be 
+ 181:scrolling_char_display.c **** 		 * displayed and advance our next character pointer 
+ 182:scrolling_char_display.c **** 		 * (next_char_to_display) so that it points to the character 
+ 183:scrolling_char_display.c **** 		 * after.
+ 184:scrolling_char_display.c **** 		 */
+ 185:scrolling_char_display.c **** 		next_char = *(next_char_to_display++);
+  92               		.loc 1 185 0
+  93 0044 ED91      		ld r30,X+
+  94               	.LVL5:
+  95 0046 B093 0000 		sts next_char_to_display+1,r27
+  96 004a A093 0000 		sts next_char_to_display,r26
+ 186:scrolling_char_display.c **** 		if(next_char == 0) {
+  97               		.loc 1 186 0
+  98 004e EE23      		tst r30
+  99 0050 01F4      		brne .L7
+ 187:scrolling_char_display.c **** 			/* We reached the null character at the end of the string.
+ 188:scrolling_char_display.c **** 			 * There is no next character, reset our pointer to 
+ 189:scrolling_char_display.c **** 			 * the next character.
+ 190:scrolling_char_display.c **** 			 */
+ 191:scrolling_char_display.c **** 			next_char_to_display = 0;
+ 100               		.loc 1 191 0
+ 101 0052 1092 0000 		sts next_char_to_display+1,__zero_reg__
+ 102 0056 1092 0000 		sts next_char_to_display,__zero_reg__
+ 103 005a 00C0      		rjmp .L14
+ 104               	.L7:
+ 192:scrolling_char_display.c **** 		} else if (next_char >= 'a' && next_char <= 'z') {
+ 105               		.loc 1 192 0
+ 106 005c 8E2F      		mov r24,r30
+ 107 005e 8156      		subi r24,lo8(-(-97))
+ 108 0060 8A31      		cpi r24,lo8(26)
+ 109 0062 00F4      		brsh .L8
+ 110               	.LBB3:
+ 193:scrolling_char_display.c **** 			/* Character is a lower case letter - the next column to 
+ 194:scrolling_char_display.c **** 			 * be displayed will be the first column of the letter
+ 195:scrolling_char_display.c **** 			 * data for that letter
+ 196:scrolling_char_display.c **** 			 */
+ 197:scrolling_char_display.c **** 			next_col_ptr = (const uint8_t*)pgm_read_word(&letters[next_char - 'a']);
+ 111               		.loc 1 197 0
+ 112 0064 F0E0      		ldi r31,lo8(0)
+ 113 0066 EE0F      		lsl r30
+ 114 0068 FF1F      		rol r31
+ 115               	.LVL6:
+ 116 006a E050      		subi r30,lo8(-(letters-194))
+ 117 006c F040      		sbci r31,hi8(-(letters-194))
+ 118               	.LVL7:
+ 119 006e 00C0      		rjmp .L19
+ 120               	.LVL8:
+ 121               	.L8:
+ 122               	.LBE3:
+ 198:scrolling_char_display.c **** 		} else if (next_char >= 'A' && next_char <= 'Z') {
+ 123               		.loc 1 198 0
+ 124 0070 8E2F      		mov r24,r30
+ 125               	.LVL9:
+ 126 0072 8154      		subi r24,lo8(-(-65))
+ 127 0074 8A31      		cpi r24,lo8(26)
+ 128 0076 00F4      		brsh .L9
+ 129               	.LBB4:
+ 199:scrolling_char_display.c **** 			/* Upper case character */
+ 200:scrolling_char_display.c **** 			next_col_ptr = (const uint8_t*)pgm_read_word(&letters[next_char - 'A']);
+ 130               		.loc 1 200 0
+ 131 0078 F0E0      		ldi r31,lo8(0)
+ 132 007a EE0F      		lsl r30
+ 133 007c FF1F      		rol r31
+ 134               	.LVL10:
+ 135 007e E050      		subi r30,lo8(-(letters-130))
+ 136 0080 F040      		sbci r31,hi8(-(letters-130))
+ 137               	.LVL11:
+ 138 0082 00C0      		rjmp .L19
+ 139               	.LVL12:
+ 140               	.L9:
+ 141               	.LBE4:
+ 201:scrolling_char_display.c **** 		} else if (next_char >= '0' && next_char <= '9') {
+ 142               		.loc 1 201 0
+ 143 0084 8E2F      		mov r24,r30
+ 144               	.LVL13:
+ 145 0086 8053      		subi r24,lo8(-(-48))
+ 146 0088 8A30      		cpi r24,lo8(10)
+ 147 008a 00F4      		brsh .L14
+ 148               	.LBB5:
+ 202:scrolling_char_display.c **** 			/* Digit */
+ 203:scrolling_char_display.c **** 			next_col_ptr = (const uint8_t*)pgm_read_word(&numbers[next_char - '0']);
+ 149               		.loc 1 203 0
+ 150 008c F0E0      		ldi r31,lo8(0)
+ 151 008e EE0F      		lsl r30
+ 152 0090 FF1F      		rol r31
+ 153               	.LVL14:
+ 154 0092 E050      		subi r30,lo8(-(numbers-96))
+ 155 0094 F040      		sbci r31,hi8(-(numbers-96))
+ 156               	.LVL15:
+ 157               	.L19:
+ 158               	/* #APP */
+ 159               	 ;  203 "scrolling_char_display.c" 1
+ 160 0096 8591      		lpm r24, Z+
+ 161 0098 9491      		lpm r25, Z
+ 162               		
+ 163               	 ;  0 "" 2
+ 164               	.LVL16:
+ 165               	/* #NOAPP */
+ 166               	.LBE5:
+ 167 009a 8093 0000 		sts next_col_ptr,r24
+ 168 009e 9093 0000 		sts next_col_ptr+1,r25
+ 169 00a2 00C0      		rjmp .L14
+ 170               	.L6:
+ 204:scrolling_char_display.c **** 		}
+ 205:scrolling_char_display.c **** 	} else {
+ 206:scrolling_char_display.c **** 		/* We're not outputting a column of dots and there is 
+ 207:scrolling_char_display.c **** 		 * no next character. Move on to the string that we
+ 208:scrolling_char_display.c **** 		 * have stored (if any).
+ 209:scrolling_char_display.c **** 		 */
+ 210:scrolling_char_display.c **** 		if(!displayString) {
+ 171               		.loc 1 210 0
+ 172 00a4 2091 0000 		lds r18,displayString
+ 173 00a8 3091 0000 		lds r19,displayString+1
+ 147:scrolling_char_display.c **** 	uint8_t finished = 0;
+ 174               		.loc 1 147 0
+ 175 00ac 81E0      		ldi r24,lo8(1)
+ 176 00ae 2115      		cp r18,__zero_reg__
+ 177 00b0 3105      		cpc r19,__zero_reg__
+ 178 00b2 01F0      		breq .L10
+ 179 00b4 80E0      		ldi r24,lo8(0)
+ 180               	.L10:
+ 181               	.LVL17:
+ 211:scrolling_char_display.c **** 			/* May be finished - flag this and adjust below if we're still
+ 212:scrolling_char_display.c **** 			 * showing pixels
+ 213:scrolling_char_display.c **** 			 */
+ 214:scrolling_char_display.c **** 			finished = 1;
+ 215:scrolling_char_display.c **** 		}
+ 216:scrolling_char_display.c **** 		next_char_to_display = displayString;
+ 182               		.loc 1 216 0
+ 183 00b6 3093 0000 		sts next_char_to_display+1,r19
+ 184 00ba 2093 0000 		sts next_char_to_display,r18
+ 217:scrolling_char_display.c **** 		displayString = 0;
+ 185               		.loc 1 217 0
+ 186 00be 1092 0000 		sts displayString+1,__zero_reg__
+ 187 00c2 1092 0000 		sts displayString,__zero_reg__
+ 188 00c6 00C0      		rjmp .L18
+ 189               	.LVL18:
+ 190               	.L14:
+ 147:scrolling_char_display.c **** 	uint8_t finished = 0;
+ 191               		.loc 1 147 0
+ 192 00c8 80E0      		ldi r24,lo8(0)
+ 193               	.LVL19:
+ 194               	.L18:
+ 154:scrolling_char_display.c **** 	col_data = 0;
+ 195               		.loc 1 154 0
+ 196 00ca A0E0      		ldi r26,lo8(0)
+ 197               	.LVL20:
+ 198               	.L5:
+ 199 00cc 60E0      		ldi r22,lo8(0)
+ 200 00ce 70E0      		ldi r23,hi8(0)
+ 218:scrolling_char_display.c **** 	}
+ 219:scrolling_char_display.c **** 	
+ 220:scrolling_char_display.c **** 	/* Insert the column data at bit 14 of the display data for each row.
+ 221:scrolling_char_display.c **** 	 * All the other bits are shifted to the right (which because bit 0 is
+ 222:scrolling_char_display.c **** 	 * displayed on the left, means the display moves one position to
+ 223:scrolling_char_display.c **** 	 * the left). Adjust our finished variable - if we set it true above
+ 224:scrolling_char_display.c **** 	 * it will remain true provided all pixels are off.
+ 225:scrolling_char_display.c **** 	 */
+ 226:scrolling_char_display.c **** 	for(i=0; i<NUM_ROWS; i++) {
+ 227:scrolling_char_display.c **** 		display[i] = (display[i] >> 1) | ((col_data << (i+NUM_ROWS))&0x4000);
+ 201               		.loc 1 227 0
+ 202 00d0 B0E0      		ldi r27,lo8(0)
+ 203               	.LVL21:
+ 204               	.L13:
+ 205 00d2 FB01      		movw r30,r22
+ 206 00d4 EE0F      		lsl r30
+ 207 00d6 FF1F      		rol r31
+ 208 00d8 E050      		subi r30,lo8(-(display))
+ 209 00da F040      		sbci r31,hi8(-(display))
+ 210 00dc 4081      		ld r20,Z
+ 211 00de 5181      		ldd r21,Z+1
+ 143:scrolling_char_display.c **** uint8_t scroll_display(void) {
+ 212               		.loc 1 143 0
+ 213 00e0 9B01      		movw r18,r22
+ 214 00e2 295F      		subi r18,lo8(-(7))
+ 215 00e4 3F4F      		sbci r19,hi8(-(7))
+ 216               		.loc 1 227 0
+ 217 00e6 ED01      		movw r28,r26
+ 218 00e8 00C0      		rjmp 2f
+ 219 00ea CC0F      	1:	lsl r28
+ 220 00ec DD1F      		rol r29
+ 221 00ee 2A95      	2:	dec r18
+ 222 00f0 02F4      		brpl 1b
+ 223 00f2 9E01      		movw r18,r28
+ 224 00f4 2070      		andi r18,lo8(16384)
+ 225 00f6 3074      		andi r19,hi8(16384)
+ 226 00f8 5695      		lsr r21
+ 227 00fa 4795      		ror r20
+ 228 00fc 242B      		or r18,r20
+ 229 00fe 352B      		or r19,r21
+ 230 0100 3183      		std Z+1,r19
+ 231 0102 2083      		st Z,r18
+ 228:scrolling_char_display.c **** 		finished = finished && (display[i] == 0);
+ 232               		.loc 1 228 0
+ 233 0104 8823      		tst r24
+ 234 0106 01F0      		breq .L15
+ 235               		.loc 1 228 0 is_stmt 0 discriminator 1
+ 236 0108 2081      		ld r18,Z
+ 237 010a 3181      		ldd r19,Z+1
+ 143:scrolling_char_display.c **** uint8_t scroll_display(void) {
+ 238               		.loc 1 143 0 is_stmt 1 discriminator 1
+ 239 010c 81E0      		ldi r24,lo8(1)
+ 240 010e 90E0      		ldi r25,hi8(1)
+ 241               	.LVL22:
+ 242 0110 2115      		cp r18,__zero_reg__
+ 243 0112 3105      		cpc r19,__zero_reg__
+ 244 0114 01F0      		breq .L11
+ 245               	.L15:
+ 246               		.loc 1 228 0
+ 247 0116 80E0      		ldi r24,lo8(0)
+ 248 0118 90E0      		ldi r25,hi8(0)
+ 249               	.L11:
+ 250               	.LVL23:
+ 251               		.loc 1 228 0 is_stmt 0 discriminator 3
+ 252 011a 6F5F      		subi r22,lo8(-(1))
+ 253 011c 7F4F      		sbci r23,hi8(-(1))
+ 226:scrolling_char_display.c **** 	for(i=0; i<NUM_ROWS; i++) {
+ 254               		.loc 1 226 0 is_stmt 1 discriminator 3
+ 255 011e 6730      		cpi r22,7
+ 256 0120 7105      		cpc r23,__zero_reg__
+ 257 0122 01F4      		brne .L13
+ 229:scrolling_char_display.c **** 	}
+ 230:scrolling_char_display.c **** #ifndef AVR
+ 231:scrolling_char_display.c **** 	/* Non AVR - we output the whole board now */
+ 232:scrolling_char_display.c **** 	display_board();
+ 233:scrolling_char_display.c **** #endif
+ 234:scrolling_char_display.c **** 	return !finished;
+ 235:scrolling_char_display.c **** }
+ 258               		.loc 1 235 0
+ 259 0124 91E0      		ldi r25,lo8(1)
+ 260 0126 8927      		eor r24,r25
+ 261               	.LVL24:
+ 262               	/* epilogue start */
+ 263 0128 DF91      		pop r29
+ 264 012a CF91      		pop r28
+ 265 012c 0895      		ret
+ 266               		.cfi_endproc
+ 267               	.LFE2:
+ 269               		.lcomm displayString,2
+ 270               		.lcomm next_col_ptr,2
+ 271               		.lcomm next_char_to_display,2
+ 272               		.section	.progmem.data,"a",@progbits
+ 275               	letters:
+ 276 0000 0000      		.word	cols_a
+ 277 0002 0000      		.word	cols_b
+ 278 0004 0000      		.word	cols_c
+ 279 0006 0000      		.word	cols_d
+ 280 0008 0000      		.word	cols_e
+ 281 000a 0000      		.word	cols_f
+ 282 000c 0000      		.word	cols_g
+ 283 000e 0000      		.word	cols_h
+ 284 0010 0000      		.word	cols_i
+ 285 0012 0000      		.word	cols_j
+ 286 0014 0000      		.word	cols_k
+ 287 0016 0000      		.word	cols_l
+ 288 0018 0000      		.word	cols_m
+ 289 001a 0000      		.word	cols_n
+ 290 001c 0000      		.word	cols_o
+ 291 001e 0000      		.word	cols_p
+ 292 0020 0000      		.word	cols_q
+ 293 0022 0000      		.word	cols_r
+ 294 0024 0000      		.word	cols_s
+ 295 0026 0000      		.word	cols_t
+ 296 0028 0000      		.word	cols_u
+ 297 002a 0000      		.word	cols_v
+ 298 002c 0000      		.word	cols_w
+ 299 002e 0000      		.word	cols_x
+ 300 0030 0000      		.word	cols_y
+ 301 0032 0000      		.word	cols_z
+ 304               	numbers:
+ 305 0034 0000      		.word	cols_0
+ 306 0036 0000      		.word	cols_1
+ 307 0038 0000      		.word	cols_2
+ 308 003a 0000      		.word	cols_3
+ 309 003c 0000      		.word	cols_4
+ 310 003e 0000      		.word	cols_5
+ 311 0040 0000      		.word	cols_6
+ 312 0042 0000      		.word	cols_7
+ 313 0044 0000      		.word	cols_8
+ 314 0046 0000      		.word	cols_9
+ 317               	cols_a:
+ 318 0048 7E        		.byte	126
+ 319 0049 90        		.byte	-112
+ 320 004a 90        		.byte	-112
+ 321 004b 7F        		.byte	127
+ 324               	cols_b:
+ 325 004c FE        		.byte	-2
+ 326 004d 92        		.byte	-110
+ 327 004e 92        		.byte	-110
+ 328 004f 6D        		.byte	109
+ 331               	cols_c:
+ 332 0050 7C        		.byte	124
+ 333 0051 82        		.byte	-126
+ 334 0052 82        		.byte	-126
+ 335 0053 45        		.byte	69
+ 338               	cols_d:
+ 339 0054 FE        		.byte	-2
+ 340 0055 82        		.byte	-126
+ 341 0056 82        		.byte	-126
+ 342 0057 7D        		.byte	125
+ 345               	cols_e:
+ 346 0058 FE        		.byte	-2
+ 347 0059 92        		.byte	-110
+ 348 005a 92        		.byte	-110
+ 349 005b 83        		.byte	-125
+ 352               	cols_f:
+ 353 005c FE        		.byte	-2
+ 354 005d 90        		.byte	-112
+ 355 005e 90        		.byte	-112
+ 356 005f 81        		.byte	-127
+ 359               	cols_g:
+ 360 0060 7C        		.byte	124
+ 361 0061 82        		.byte	-126
+ 362 0062 92        		.byte	-110
+ 363 0063 5D        		.byte	93
+ 366               	cols_h:
+ 367 0064 FE        		.byte	-2
+ 368 0065 10        		.byte	16
+ 369 0066 10        		.byte	16
+ 370 0067 FF        		.byte	-1
+ 373               	cols_i:
+ 374 0068 82        		.byte	-126
+ 375 0069 FE        		.byte	-2
+ 376 006a 83        		.byte	-125
+ 379               	cols_j:
+ 380 006b 04        		.byte	4
+ 381 006c 02        		.byte	2
+ 382 006d 02        		.byte	2
+ 383 006e FD        		.byte	-3
+ 386               	cols_k:
+ 387 006f FE        		.byte	-2
+ 388 0070 10        		.byte	16
+ 389 0071 28        		.byte	40
+ 390 0072 C7        		.byte	-57
+ 393               	cols_l:
+ 394 0073 FE        		.byte	-2
+ 395 0074 02        		.byte	2
+ 396 0075 02        		.byte	2
+ 397 0076 03        		.byte	3
+ 400               	cols_m:
+ 401 0077 FE        		.byte	-2
+ 402 0078 40        		.byte	64
+ 403 0079 30        		.byte	48
+ 404 007a 40        		.byte	64
+ 405 007b FF        		.byte	-1
+ 408               	cols_n:
+ 409 007c FE        		.byte	-2
+ 410 007d 20        		.byte	32
+ 411 007e 10        		.byte	16
+ 412 007f FF        		.byte	-1
+ 415               	cols_o:
+ 416 0080 7C        		.byte	124
+ 417 0081 82        		.byte	-126
+ 418 0082 82        		.byte	-126
+ 419 0083 7D        		.byte	125
+ 422               	cols_p:
+ 423 0084 FE        		.byte	-2
+ 424 0085 90        		.byte	-112
+ 425 0086 90        		.byte	-112
+ 426 0087 61        		.byte	97
+ 429               	cols_q:
+ 430 0088 7C        		.byte	124
+ 431 0089 82        		.byte	-126
+ 432 008a 8A        		.byte	-118
+ 433 008b 7C        		.byte	124
+ 434 008c 03        		.byte	3
+ 437               	cols_r:
+ 438 008d FE        		.byte	-2
+ 439 008e 90        		.byte	-112
+ 440 008f 98        		.byte	-104
+ 441 0090 67        		.byte	103
+ 444               	cols_s:
+ 445 0091 64        		.byte	100
+ 446 0092 92        		.byte	-110
+ 447 0093 92        		.byte	-110
+ 448 0094 4D        		.byte	77
+ 451               	cols_t:
+ 452 0095 80        		.byte	-128
+ 453 0096 80        		.byte	-128
+ 454 0097 FE        		.byte	-2
+ 455 0098 80        		.byte	-128
+ 456 0099 81        		.byte	-127
+ 459               	cols_u:
+ 460 009a FC        		.byte	-4
+ 461 009b 02        		.byte	2
+ 462 009c 02        		.byte	2
+ 463 009d FD        		.byte	-3
+ 466               	cols_v:
+ 467 009e F8        		.byte	-8
+ 468 009f 04        		.byte	4
+ 469 00a0 02        		.byte	2
+ 470 00a1 04        		.byte	4
+ 471 00a2 F9        		.byte	-7
+ 474               	cols_w:
+ 475 00a3 FC        		.byte	-4
+ 476 00a4 02        		.byte	2
+ 477 00a5 1C        		.byte	28
+ 478 00a6 02        		.byte	2
+ 479 00a7 FD        		.byte	-3
+ 482               	cols_x:
+ 483 00a8 C6        		.byte	-58
+ 484 00a9 28        		.byte	40
+ 485 00aa 10        		.byte	16
+ 486 00ab 28        		.byte	40
+ 487 00ac C7        		.byte	-57
+ 490               	cols_y:
+ 491 00ad E0        		.byte	-32
+ 492 00ae 10        		.byte	16
+ 493 00af 0E        		.byte	14
+ 494 00b0 10        		.byte	16
+ 495 00b1 E1        		.byte	-31
+ 498               	cols_z:
+ 499 00b2 86        		.byte	-122
+ 500 00b3 8A        		.byte	-118
+ 501 00b4 92        		.byte	-110
+ 502 00b5 A2        		.byte	-94
+ 503 00b6 C3        		.byte	-61
+ 506               	cols_0:
+ 507 00b7 7C        		.byte	124
+ 508 00b8 92        		.byte	-110
+ 509 00b9 A2        		.byte	-94
+ 510 00ba 7D        		.byte	125
+ 513               	cols_1:
+ 514 00bb 42        		.byte	66
+ 515 00bc FE        		.byte	-2
+ 516 00bd 03        		.byte	3
+ 519               	cols_2:
+ 520 00be 46        		.byte	70
+ 521 00bf 8A        		.byte	-118
+ 522 00c0 92        		.byte	-110
+ 523 00c1 63        		.byte	99
+ 526               	cols_3:
+ 527 00c2 44        		.byte	68
+ 528 00c3 92        		.byte	-110
+ 529 00c4 92        		.byte	-110
+ 530 00c5 6D        		.byte	109
+ 533               	cols_4:
+ 534 00c6 18        		.byte	24
+ 535 00c7 28        		.byte	40
+ 536 00c8 48        		.byte	72
+ 537 00c9 FF        		.byte	-1
+ 540               	cols_5:
+ 541 00ca E4        		.byte	-28
+ 542 00cb A2        		.byte	-94
+ 543 00cc A2        		.byte	-94
+ 544 00cd 9D        		.byte	-99
+ 547               	cols_6:
+ 548 00ce 7C        		.byte	124
+ 549 00cf 92        		.byte	-110
+ 550 00d0 92        		.byte	-110
+ 551 00d1 4D        		.byte	77
+ 554               	cols_7:
+ 555 00d2 80        		.byte	-128
+ 556 00d3 9E        		.byte	-98
+ 557 00d4 A0        		.byte	-96
+ 558 00d5 C1        		.byte	-63
+ 561               	cols_8:
+ 562 00d6 6C        		.byte	108
+ 563 00d7 92        		.byte	-110
+ 564 00d8 92        		.byte	-110
+ 565 00d9 6D        		.byte	109
+ 568               	cols_9:
+ 569 00da 64        		.byte	100
+ 570 00db 92        		.byte	-110
+ 571 00dc 92        		.byte	-110
+ 572 00dd 7D        		.byte	125
+ 573               		.text
+ 574               	.Letext0:
+ 575               		.file 2 "/usr/local/CrossPack-AVR-20130212/lib/gcc/avr/4.6.2/../../../../avr/include/stdint.h"
+ 576               		.file 3 "led_display.h"
+DEFINED SYMBOLS
+                            *ABS*:00000000 scrolling_char_display.c
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccO7qLDg.s:2      *ABS*:0000003f __SREG__
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccO7qLDg.s:3      *ABS*:0000003e __SP_H__
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccO7qLDg.s:4      *ABS*:0000003d __SP_L__
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccO7qLDg.s:5      *ABS*:00000034 __CCP__
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccO7qLDg.s:6      *ABS*:00000000 __tmp_reg__
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccO7qLDg.s:7      *ABS*:00000001 __zero_reg__
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccO7qLDg.s:15     .text:00000000 set_scrolling_display_text
+                             .bss:00000000 displayString
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccO7qLDg.s:36     .text:0000000a scroll_display
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccO7qLDg.s:269    .bss:00000002 next_col_ptr
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccO7qLDg.s:270    .bss:00000004 next_char_to_display
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccO7qLDg.s:275    .progmem.data:00000000 letters
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccO7qLDg.s:304    .progmem.data:00000034 numbers
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccO7qLDg.s:317    .progmem.data:00000048 cols_a
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccO7qLDg.s:324    .progmem.data:0000004c cols_b
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccO7qLDg.s:331    .progmem.data:00000050 cols_c
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccO7qLDg.s:338    .progmem.data:00000054 cols_d
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccO7qLDg.s:345    .progmem.data:00000058 cols_e
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccO7qLDg.s:352    .progmem.data:0000005c cols_f
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccO7qLDg.s:359    .progmem.data:00000060 cols_g
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccO7qLDg.s:366    .progmem.data:00000064 cols_h
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccO7qLDg.s:373    .progmem.data:00000068 cols_i
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccO7qLDg.s:379    .progmem.data:0000006b cols_j
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccO7qLDg.s:386    .progmem.data:0000006f cols_k
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccO7qLDg.s:393    .progmem.data:00000073 cols_l
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccO7qLDg.s:400    .progmem.data:00000077 cols_m
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccO7qLDg.s:408    .progmem.data:0000007c cols_n
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccO7qLDg.s:415    .progmem.data:00000080 cols_o
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccO7qLDg.s:422    .progmem.data:00000084 cols_p
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccO7qLDg.s:429    .progmem.data:00000088 cols_q
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccO7qLDg.s:437    .progmem.data:0000008d cols_r
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccO7qLDg.s:444    .progmem.data:00000091 cols_s
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccO7qLDg.s:451    .progmem.data:00000095 cols_t
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccO7qLDg.s:459    .progmem.data:0000009a cols_u
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccO7qLDg.s:466    .progmem.data:0000009e cols_v
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccO7qLDg.s:474    .progmem.data:000000a3 cols_w
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccO7qLDg.s:482    .progmem.data:000000a8 cols_x
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccO7qLDg.s:490    .progmem.data:000000ad cols_y
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccO7qLDg.s:498    .progmem.data:000000b2 cols_z
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccO7qLDg.s:506    .progmem.data:000000b7 cols_0
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccO7qLDg.s:513    .progmem.data:000000bb cols_1
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccO7qLDg.s:519    .progmem.data:000000be cols_2
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccO7qLDg.s:526    .progmem.data:000000c2 cols_3
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccO7qLDg.s:533    .progmem.data:000000c6 cols_4
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccO7qLDg.s:540    .progmem.data:000000ca cols_5
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccO7qLDg.s:547    .progmem.data:000000ce cols_6
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccO7qLDg.s:554    .progmem.data:000000d2 cols_7
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccO7qLDg.s:561    .progmem.data:000000d6 cols_8
+/var/folders/5q/cbspj09573sdz95ppjc1lv4w0000gn/T//ccO7qLDg.s:568    .progmem.data:000000da cols_9
+
+UNDEFINED SYMBOLS
+__do_copy_data
+__do_clear_bss
+display
