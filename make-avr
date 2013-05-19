@@ -402,7 +402,7 @@ build: elf hex eep lss sym
 #build: lib
 
 
-elf: $(addprefx $(BUILT_PRODUCTS_DIR)/, $(TARGET).elf)
+elf: $(addprefix $(BUILT_PRODUCTS_DIR)/, $(TARGET).elf)
 hex: $(addprefix $(BUILT_PRODUCTS_DIR)/, $(TARGET).hex)
 eep: $(addprefix $(BUILT_PRODUCTS_DIR)/, $(TARGET).eep)
 lss: $(addprefix $(BUILT_PRODUCTS_DIR)/, $(TARGET).lss)
@@ -588,13 +588,13 @@ clean: begin clean_list end
 clean_list :
 	@echo
 	@echo $(MSG_CLEANING)
-	$(REMOVE) $(addprefx $(BUILT_PRODUCTS_DIR)/, $(TARGET).hex)
-	$(REMOVE) $(addprefx $(BUILT_PRODUCTS_DIR)/, $(TARGET).eep)
-	$(REMOVE) $(addprefx $(BUILT_PRODUCTS_DIR)/, $(TARGET).cof)
-	$(REMOVE) $(addprefx $(BUILT_PRODUCTS_DIR)/, $(TARGET).elf)
-	$(REMOVE) $(addprefx $(BUILT_PRODUCTS_DIR)/, $(TARGET).map)
-	$(REMOVE) $(addprefx $(BUILT_PRODUCTS_DIR)/, $(TARGET).sym)
-	$(REMOVE) $(addprefx $(BUILT_PRODUCTS_DIR)/, $(TARGET).lss)
+	$(REMOVE) $(addprefix $(BUILT_PRODUCTS_DIR)/, $(TARGET).hex)
+	$(REMOVE) $(addprefix $(BUILT_PRODUCTS_DIR)/, $(TARGET).eep)
+	$(REMOVE) $(addprefix $(BUILT_PRODUCTS_DIR)/, $(TARGET).cof)
+	$(REMOVE) $(addprefix $(BUILT_PRODUCTS_DIR)/, $(TARGET).elf)
+	$(REMOVE) $(addprefix $(BUILT_PRODUCTS_DIR)/, $(TARGET).map)
+	$(REMOVE) $(addprefix $(BUILT_PRODUCTS_DIR)/, $(TARGET).sym)
+	$(REMOVE) $(addprefix $(BUILT_PRODUCTS_DIR)/, $(TARGET).lss)
 	$(REMOVE) $(SRC:%.c=$(OBJDIR)/%.o)
 	$(REMOVE) $(SRC:%.c=$(OBJDIR)/%.lst)
 	$(REMOVE) $(SRC:.c=.s)
