@@ -40,6 +40,7 @@
 #----------------------------------------------------------------------------
 
 
+
 # MCU name
 MCU = atmega64
 
@@ -72,11 +73,10 @@ FORMAT = ihex
 # Target file name (without extension).
 TARGET = project
 
-
 # Object files directory
 #     To put object files in current directory, use a dot (.), do NOT make
 #     this an empty or blank macro!
-OBJDIR = .
+OBJDIR = $(OBJROOT)
 
 
 # List C source files here. (C dependencies are automatically generated.)
@@ -259,7 +259,7 @@ EXTMEMOPTS =
 #  -Wl,...:     tell GCC to pass this to linker.
 #    -Map:      create map file
 #    --cref:    add cross reference to  map file
-LDFLAGS = -Wl,-Map=$(TARGET).map,--cref
+LDFLAGS = -Wl,-Map=$(addprefix $(BUILT_PRODUCTS_DIR)/, $(TARGET).map),--cref
 LDFLAGS += $(EXTMEMOPTS)
 LDFLAGS += $(patsubst %,-L%,$(EXTRALIBDIRS))
 LDFLAGS += $(PRINTF_LIB) $(SCANF_LIB) $(MATH_LIB)
@@ -374,10 +374,10 @@ MSG_CREATING_LIBRARY = Creating library:
 
 
 # Define all object files.
-OBJ = $(SRC:%.c=$(OBJDIR)/%.o) $(CPPSRC:%.cpp=$(OBJDIR)/%.o) $(ASRC:%.S=$(OBJDIR)/%.o) 
+OBJ = $(SRC:%.c=$(addprefix $(OBJDIR)/, %.o)) $(CPPSRC:%.cpp=$(OBJDIR)/%.o) $(ASRC:%.S=$(OBJDIR)/%.o)
 
 # Define all listing files.
-LST = $(SRC:%.c=$(OBJDIR)/%.lst) $(CPPSRC:%.cpp=$(OBJDIR)/%.lst) $(ASRC:%.S=$(OBJDIR)/%.lst) 
+LST = $(SRC:%.c=$(OBJDIR)/%.lst) $(CPPSRC:%.cpp=$(OBJDIR)/%.lst) $(ASRC:%.S=$(OBJDIR)/%.lst)
 
 
 # Compiler flags to generate dependency files.
@@ -402,11 +402,11 @@ build: elf hex eep lss sym
 #build: lib
 
 
-elf: $(TARGET).elf
-hex: $(TARGET).hex
-eep: $(TARGET).eep
-lss: $(TARGET).lss
-sym: $(TARGET).sym
+elf: $(addprefx $(BUILT_PRODUCTS_DIR)/, $(TARGET).elf)
+hex: $(addprefix $(BUILT_PRODUCTS_DIR)/, $(TARGET).hex)
+eep: $(addprefix $(BUILT_PRODUCTS_DIR)/, $(TARGET).eep)
+lss: $(addprefix $(BUILT_PRODUCTS_DIR)/, $(TARGET).lss)
+sym: $(addprefix $(BUILT_PRODUCTS_DIR)/, $(TARGET).sym)
 LIBNAME=lib$(TARGET).a
 lib: $(LIBNAME)
 
@@ -588,13 +588,13 @@ clean: begin clean_list end
 clean_list :
 	@echo
 	@echo $(MSG_CLEANING)
-	$(REMOVE) $(TARGET).hex
-	$(REMOVE) $(TARGET).eep
-	$(REMOVE) $(TARGET).cof
-	$(REMOVE) $(TARGET).elf
-	$(REMOVE) $(TARGET).map
-	$(REMOVE) $(TARGET).sym
-	$(REMOVE) $(TARGET).lss
+	$(REMOVE) $(addprefx $(BUILT_PRODUCTS_DIR)/, $(TARGET).hex)
+	$(REMOVE) $(addprefx $(BUILT_PRODUCTS_DIR)/, $(TARGET).eep)
+	$(REMOVE) $(addprefx $(BUILT_PRODUCTS_DIR)/, $(TARGET).cof)
+	$(REMOVE) $(addprefx $(BUILT_PRODUCTS_DIR)/, $(TARGET).elf)
+	$(REMOVE) $(addprefx $(BUILT_PRODUCTS_DIR)/, $(TARGET).map)
+	$(REMOVE) $(addprefx $(BUILT_PRODUCTS_DIR)/, $(TARGET).sym)
+	$(REMOVE) $(addprefx $(BUILT_PRODUCTS_DIR)/, $(TARGET).lss)
 	$(REMOVE) $(SRC:%.c=$(OBJDIR)/%.o)
 	$(REMOVE) $(SRC:%.c=$(OBJDIR)/%.lst)
 	$(REMOVE) $(SRC:.c=.s)
