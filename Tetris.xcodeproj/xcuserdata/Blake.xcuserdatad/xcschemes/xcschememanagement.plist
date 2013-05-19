@@ -7,12 +7,12 @@
 		<key>AVR.xcscheme</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>1</integer>
+			<integer>2</integer>
 		</dict>
 		<key>Terminal.xcscheme</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>2</integer>
+			<integer>1</integer>
 		</dict>
 		<key>Tetris.xcscheme</key>
 		<dict>
@@ -23,6 +23,11 @@
 	<key>SuppressBuildableAutocreation</key>
 	<dict>
 		<key>253070771748CFDA00188C7D</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>255A734F1748FD1800976396</key>
 		<dict>
 			<key>primary</key>
 			<true/>

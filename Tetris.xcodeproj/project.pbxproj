@@ -8,32 +8,21 @@
 
 /* Begin PBXBuildFile section */
 		258ACF74174355900076F4BD /* board.c in Sources */ = {isa = PBXBuildFile; fileRef = 258ACF4917434C3D0076F4BD /* board.c */; };
-		258ACF75174355900076F4BD /* board.h in Sources */ = {isa = PBXBuildFile; fileRef = 258ACF4A17434C3D0076F4BD /* board.h */; };
 		258ACF76174355900076F4BD /* external_interrupt.c in Sources */ = {isa = PBXBuildFile; fileRef = 258ACF4B17434C3D0076F4BD /* external_interrupt.c */; };
-		258ACF77174355900076F4BD /* external_interrupt.h in Sources */ = {isa = PBXBuildFile; fileRef = 258ACF4C17434C3D0076F4BD /* external_interrupt.h */; };
 		258ACF78174355900076F4BD /* joystick.c in Sources */ = {isa = PBXBuildFile; fileRef = 258ACF4D17434C3D0076F4BD /* joystick.c */; };
-		258ACF79174355900076F4BD /* joystick.h in Sources */ = {isa = PBXBuildFile; fileRef = 258ACF4E17434C3D0076F4BD /* joystick.h */; };
 		258ACF7A174355900076F4BD /* keypad.c in Sources */ = {isa = PBXBuildFile; fileRef = 258ACF4F17434C3D0076F4BD /* keypad.c */; };
-		258ACF7B174355900076F4BD /* keypad.h in Sources */ = {isa = PBXBuildFile; fileRef = 258ACF5017434C3D0076F4BD /* keypad.h */; };
 		258ACF7C174355900076F4BD /* led_display.c in Sources */ = {isa = PBXBuildFile; fileRef = 258ACF5117434C3D0076F4BD /* led_display.c */; };
-		258ACF7D174355900076F4BD /* led_display.h in Sources */ = {isa = PBXBuildFile; fileRef = 258ACF5217434C3D0076F4BD /* led_display.h */; };
 		258ACF7E174355900076F4BD /* pieces.c in Sources */ = {isa = PBXBuildFile; fileRef = 258ACF5317434C3D0076F4BD /* pieces.c */; };
-		258ACF7F174355900076F4BD /* pieces.h in Sources */ = {isa = PBXBuildFile; fileRef = 258ACF5417434C3D0076F4BD /* pieces.h */; };
 		258ACF80174355900076F4BD /* project.c in Sources */ = {isa = PBXBuildFile; fileRef = 258ACF5517434C3D0076F4BD /* project.c */; };
 		258ACF81174355900076F4BD /* score.c in Sources */ = {isa = PBXBuildFile; fileRef = 258ACF5617434C3D0076F4BD /* score.c */; };
-		258ACF82174355900076F4BD /* score.h in Sources */ = {isa = PBXBuildFile; fileRef = 258ACF5717434C3D0076F4BD /* score.h */; };
 		258ACF83174355900076F4BD /* scrolling_char_display.c in Sources */ = {isa = PBXBuildFile; fileRef = 258ACF5817434C3D0076F4BD /* scrolling_char_display.c */; };
-		258ACF84174355900076F4BD /* scrolling_char_display.h in Sources */ = {isa = PBXBuildFile; fileRef = 258ACF5917434C3D0076F4BD /* scrolling_char_display.h */; };
 		258ACF85174355900076F4BD /* serialio.c in Sources */ = {isa = PBXBuildFile; fileRef = 258ACF5A17434C3D0076F4BD /* serialio.c */; };
-		258ACF86174355900076F4BD /* serialio.h in Sources */ = {isa = PBXBuildFile; fileRef = 258ACF5B17434C3D0076F4BD /* serialio.h */; };
 		258ACF87174355900076F4BD /* terminalio.c in Sources */ = {isa = PBXBuildFile; fileRef = 258ACF5C17434C3D0076F4BD /* terminalio.c */; };
-		258ACF88174355900076F4BD /* terminalio.h in Sources */ = {isa = PBXBuildFile; fileRef = 258ACF5D17434C3D0076F4BD /* terminalio.h */; };
 		258ACF89174355900076F4BD /* timer2.c in Sources */ = {isa = PBXBuildFile; fileRef = 258ACF5E17434C3D0076F4BD /* timer2.c */; };
-		258ACF8A174355900076F4BD /* timer2.h in Sources */ = {isa = PBXBuildFile; fileRef = 258ACF5F17434C3D0076F4BD /* timer2.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		253070861748E1CB00188C7D /* terminal */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "compiled.mach-o.executable"; path = terminal; sourceTree = BUILT_PRODUCTS_DIR; };
+		253070861748E1CB00188C7D /* Terminal */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Terminal; sourceTree = BUILT_PRODUCTS_DIR; };
 		253070871748E1EA00188C7D /* project.eep */ = {isa = PBXFileReference; lastKnownFileType = text; name = project.eep; path = "../../Library/Developer/Xcode/DerivedData/Tetris-evaknpdpwndcqohhhobqqhpnzdit/Build/Products/Release/project.eep"; sourceTree = "<group>"; };
 		253070881748E1EA00188C7D /* project.hex */ = {isa = PBXFileReference; lastKnownFileType = text; name = project.hex; path = "../../Library/Developer/Xcode/DerivedData/Tetris-evaknpdpwndcqohhhobqqhpnzdit/Build/Products/Release/project.hex"; sourceTree = "<group>"; };
 		253070891748E1EA00188C7D /* project.lss */ = {isa = PBXFileReference; lastKnownFileType = text; name = project.lss; path = "../../Library/Developer/Xcode/DerivedData/Tetris-evaknpdpwndcqohhhobqqhpnzdit/Build/Products/Release/project.lss"; sourceTree = "<group>"; };
@@ -80,7 +69,7 @@
 		2530708D1748E21300188C7D /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				253070861748E1CB00188C7D /* terminal */,
+				253070861748E1CB00188C7D /* Terminal */,
 				253070871748E1EA00188C7D /* project.eep */,
 				253070881748E1EA00188C7D /* project.hex */,
 				253070891748E1EA00188C7D /* project.lss */,
@@ -163,7 +152,7 @@
 			);
 			name = Terminal;
 			productName = terminal;
-			productReference = 253070861748E1CB00188C7D /* terminal */;
+			productReference = 253070861748E1CB00188C7D /* Terminal */;
 			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
@@ -198,28 +187,17 @@
 			buildActionMask = 2147483647;
 			files = (
 				258ACF74174355900076F4BD /* board.c in Sources */,
-				258ACF75174355900076F4BD /* board.h in Sources */,
 				258ACF76174355900076F4BD /* external_interrupt.c in Sources */,
-				258ACF77174355900076F4BD /* external_interrupt.h in Sources */,
 				258ACF78174355900076F4BD /* joystick.c in Sources */,
-				258ACF79174355900076F4BD /* joystick.h in Sources */,
 				258ACF7A174355900076F4BD /* keypad.c in Sources */,
-				258ACF7B174355900076F4BD /* keypad.h in Sources */,
 				258ACF7C174355900076F4BD /* led_display.c in Sources */,
-				258ACF7D174355900076F4BD /* led_display.h in Sources */,
 				258ACF7E174355900076F4BD /* pieces.c in Sources */,
-				258ACF7F174355900076F4BD /* pieces.h in Sources */,
 				258ACF80174355900076F4BD /* project.c in Sources */,
 				258ACF81174355900076F4BD /* score.c in Sources */,
-				258ACF82174355900076F4BD /* score.h in Sources */,
 				258ACF83174355900076F4BD /* scrolling_char_display.c in Sources */,
-				258ACF84174355900076F4BD /* scrolling_char_display.h in Sources */,
 				258ACF85174355900076F4BD /* serialio.c in Sources */,
-				258ACF86174355900076F4BD /* serialio.h in Sources */,
 				258ACF87174355900076F4BD /* terminalio.c in Sources */,
-				258ACF88174355900076F4BD /* terminalio.h in Sources */,
 				258ACF89174355900076F4BD /* timer2.c in Sources */,
-				258ACF8A174355900076F4BD /* timer2.h in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -238,9 +216,11 @@
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_PREPROCESSOR_DEFINITIONS = "";
+				"GCC_PREPROCESSOR_DEFINITIONS[arch=*]" = "";
 				GCC_VERSION = com.apple.compilers.llvmgcc42;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
@@ -256,6 +236,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COPY_PHASE_STRIP = YES;
+				"GCC_PREPROCESSOR_DEFINITIONS[arch=*]" = "AVR=1";
+				GCC_PREPROCESSOR_DEFINITIONS_NOT_USED_IN_PRECOMPS = "";
+				GCC_VERSION = com.apple.compilers.llvmgcc42;
 			};
 			name = Release;
 		};
@@ -264,6 +247,7 @@
 			buildSettings = {
 				INCLUDE_PATH = "/usr/local/CrossPack-AVR/avr/include";
 				PATH = "$(PATH):/usr/local/CrossPack-AVR/bin";
+				PREPROCESSOR_MACROS = "AVR=1";
 			};
 			name = Release;
 		};
