@@ -173,11 +173,11 @@ int8_t move_piece_left(piece_type* piecePtr) {
 int8_t move_piece_right(piece_type* piecePtr) {
     int8_t row;
     
-    if(piecePtr->right_column - piecePtr->y_dimension <= 0) {
+    if(piecePtr->right_column <= 0) {
         return 0;
     }
     
-    for(row=0; row < piecePtr->x_dimension; row++) {
+    for(row=0; row < piecePtr->y_dimension; row++) {
         piecePtr->rowdata[row] >>= 1;
     }
     piecePtr->right_column--;
