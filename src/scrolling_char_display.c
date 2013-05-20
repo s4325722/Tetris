@@ -130,6 +130,9 @@ static volatile char* next_char_to_display = 0;
  */
 void set_scrolling_display_text(char* string_to_display) {
 	displayString = string_to_display;
+    // Added to clear text
+    next_char_to_display = 0;
+    next_col_ptr = 0;
 }
 
 /*

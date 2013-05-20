@@ -179,8 +179,44 @@ void play_game(void) {
 
 /* Handle the game being over. By default - pause forever. */
 void handle_game_over(void) {
-	while(1) {
-		; /* Do nothing */
+//	while(1) {
+//		; /* Do nothing */
+//	}
+    
+    uint32_t currentTime;
+	uint32_t displayLastScrolledTime = 0;
+    
+    char plural = 's';
+    char score[14];
+    uint16_t points = get_score();
+    
+    if(points == 1)
+        plural = '\0';
+    
+    sprintf(score, "[%d] Point%s", get_score(), plural);
+
+    init_board();
+    set_scrolling_display_text(score);
+    
+    while(1) {
+		currentTime = get_clock_ticks();
+		
+		if(currentTime >= displayLastScrolledTime + 150) {
+			/* Scroll our message every 150ms. Exit the loop
+			 * if finished (scroll_display() returns 0).
+             */
+			if(scroll_display() == 0) {
+				set_scrolling_display_text(score);
+			}
+			displayLastScrolledTime = currentTime;
+		}
+		if(button_pushed() != -1 || keypad_button_pushed() != 0 ||
+           serial_input_available()) {
+			/* A push button or keypad button or key was pressed - abort
+			 * showing our splash screen.
+			 */
+			break;
+		}
 	}
 }
 

@@ -265,12 +265,13 @@ void fix_piece_to_board(void) {
 }
 
 void check_for_completed_rows(void) {
-    int8_t i, j;
+    int8_t i, j, completed_count = 0;
     
     for(i = 0; i < BOARD_ROWS - 1; i++){
-        uint8_t board_row = board[i];
-        
-        if(board_row == (1 << BOARD_WIDTH) - 1){
+        if(board[i] == (1 << BOARD_WIDTH) - 1){
+            // Increment completed count
+            completed_count++;
+            
             // Drop rows above
             for(j = i + 1; j < BOARD_ROWS - 1; j++){
                 board[j - 1] = board[j];
@@ -280,6 +281,9 @@ void check_for_completed_rows(void) {
             board[j] = 0;
         }
     }
+    
+    // Update score
+    add_to_score(completed_count);
     
 	/* YOUR CODE HERE */
 	
