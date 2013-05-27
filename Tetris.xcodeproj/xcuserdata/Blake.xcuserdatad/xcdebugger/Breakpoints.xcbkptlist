@@ -8,11 +8,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "src/project.c"
-         timestampString = "390673403.059543"
+         timestampString = "391336518.613196"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "153"
-         endingLineNumber = "153"
+         startingLineNumber = "167"
+         endingLineNumber = "167"
          landmarkName = "play_game()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -60,51 +60,103 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "src/project.c"
-         timestampString = "390726704.350763"
+         timestampString = "391336518.613196"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "219"
+         endingLineNumber = "219"
+         landmarkName = "handle_game_over()"
+         landmarkType = "7">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "No"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         filePath = "src/project.c"
+         timestampString = "391336518.613196"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "220"
+         endingLineNumber = "220"
+         landmarkName = "handle_game_over()"
+         landmarkType = "7">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "No"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         filePath = "src/project.c"
+         timestampString = "391336518.613196"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "217"
+         endingLineNumber = "217"
+         landmarkName = "handle_game_over()"
+         landmarkType = "7">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "No"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         filePath = "src/project.c"
+         timestampString = "391336518.613196"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "210"
+         endingLineNumber = "210"
+         landmarkName = "handle_game_over()"
+         landmarkType = "7">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "No"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         filePath = "src/project.c"
+         timestampString = "391336518.613196"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
          startingLineNumber = "198"
          endingLineNumber = "198"
-         landmarkName = "handle_game_over()"
+         landmarkName = "handle_game_paused()"
          landmarkType = "7">
       </FileBreakpoint>
       <FileBreakpoint
-         shouldBeEnabled = "No"
+         shouldBeEnabled = "Yes"
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "src/project.c"
-         timestampString = "390726704.350763"
+         timestampString = "391336548.356713"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "199"
-         endingLineNumber = "199"
-         landmarkName = "handle_game_over()"
+         startingLineNumber = "178"
+         endingLineNumber = "178"
+         landmarkName = "play_game()"
          landmarkType = "7">
       </FileBreakpoint>
       <FileBreakpoint
-         shouldBeEnabled = "No"
+         shouldBeEnabled = "Yes"
          ignoreCount = "0"
          continueAfterRunningActions = "No"
-         filePath = "src/project.c"
-         timestampString = "390726673.892159"
+         filePath = "src/sprite_display.c"
+         timestampString = "391336887.118292"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "196"
-         endingLineNumber = "196"
-         landmarkName = "handle_game_over()"
+         startingLineNumber = "52"
+         endingLineNumber = "52"
+         landmarkName = "sprite_show()"
          landmarkType = "7">
       </FileBreakpoint>
       <FileBreakpoint
-         shouldBeEnabled = "No"
+         shouldBeEnabled = "Yes"
          ignoreCount = "0"
          continueAfterRunningActions = "No"
-         filePath = "src/project.c"
-         timestampString = "390728686.805204"
+         filePath = "src/sprite_display.c"
+         timestampString = "391336884.809445"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "189"
-         endingLineNumber = "189"
-         landmarkName = "handle_game_over()"
+         startingLineNumber = "42"
+         endingLineNumber = "42"
+         landmarkName = "sprite_from_array()"
          landmarkType = "7">
       </FileBreakpoint>
    </FileBreakpoints>

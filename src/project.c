@@ -15,6 +15,9 @@
 #include "terminalio.h"
 #include <stdio.h>
 #include <stdint.h>
+#include <ctype.h>
+#include "seven_seg_display.h"
+#include "sprite_display.h";
 
 #ifdef AVR
 #include <avr/io.h>
@@ -32,6 +35,7 @@ void splash_screen(void);
 void new_game(void);
 void play_game(void);
 void handle_game_over(void);
+void handle_game_paused();
 
 /*
  * main -- Main program.
@@ -53,6 +57,34 @@ int main(void) {
 		play_game();
 		handle_game_over();
 	}
+}
+
+char input_read_char(void){
+    char input;
+    
+    /* Check for button pushes and/or serial input. */
+    input = keypad_button_pushed();
+    if(!input) {
+        input = button_pushed();
+        if(input >= 0 && input <= 3) {
+            /* Button was pushed (0 to 3) - turn these into lower case
+             * characters, i.e. 0 to 'a', 1 to 'b' etc.
+             */
+            input += 97;	/* ASCII code for 'a' */
+        } else {
+            /* No button was pushed */
+            input = 0;
+        }
+    }
+    if(!input && serial_input_available()) {
+        /* No keypad or push button was pushed, but serial input is
+         * available. Fetch it. We can use the serial port
+         * to emulate the push buttons etc below.
+         */
+        input = fgetc(stdin);
+    }
+    
+    return input;
 }
 
 void new_game(void) {
@@ -109,28 +141,10 @@ void play_game(void) {
 				}				
 			}
 		}
+        
+        input = input_read_char();
 		
-		/* Check for button pushes and/or serial input. */
-		input = keypad_button_pushed();
-		if(!input) {
-			input = button_pushed();
-			if(input >= 0 && input <= 3) {
-				/* Button was pushed (0 to 3) - turn these into lower case
-				 * characters, i.e. 0 to 'a', 1 to 'b' etc.
-				 */
-				input += 97;	/* ASCII code for 'a' */
-			} else {
-				/* No button was pushed */
-				input = 0;
-			}
-		}
-		if(!input && serial_input_available()) {
-			/* No keypad or push button was pushed, but serial input is
-			 * available. Fetch it. We can use the serial port
-			 * to emulate the push buttons etc below.
-			 */
-			input = fgetc(stdin);
-		}
+        // Modified to convert all input to upper.
 		switch(input) {
 			case 'A':	/* Keypad 'A' */
 				/* Attempt to rotate the current piece */
@@ -161,8 +175,7 @@ void play_game(void) {
 				}				
 				break;
 			case 'a':	/* Button 0 */
-				/* Pause/unpause the game */
-				/* UNIMPLEMENTED FEATURE */
+                handle_game_paused();
 				break;
 			default:
 				/* Ignore other button pushes or null event. */
@@ -172,9 +185,18 @@ void play_game(void) {
 		if(board_updated) {
 			/* Update display of board since its appearance has changed. */
 			copy_board_to_led_display();
+            
 			board_updated = 0;
 		}
 	}
+}
+
+void handle_game_paused(){
+    sprite_show((uint8_t**)sprite_paused);
+    
+    while(input_read_char() != 'a'){
+        continue;
+    }
 }
 
 /* Handle the game being over. By default - pause forever. */
@@ -226,6 +248,10 @@ void handle_game_over(void) {
 void timer_activities(void) {
 	/* Update our LED display */
 	display_row();
+    
+    /* Update 7Seg LED display */
+    seven_seg_display();
+     
 	
 	/* Check the next column of our keypad for any button pushes. */
 	check_keypad_column();
@@ -296,7 +322,7 @@ void splash_screen(void) {
 			 */
 			break;
 		}
-	}		
+	}
 }
 
 

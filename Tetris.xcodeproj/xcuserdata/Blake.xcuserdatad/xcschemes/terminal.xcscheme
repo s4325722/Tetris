@@ -54,7 +54,7 @@
             ActionType = "Xcode.IDEStandardExecutionActionsCore.ExecutionActionType.ShellScriptAction">
             <ActionContent
                title = "Run Script"
-               scriptText = "open -a /Applications/Utilities/Terminal.app ${BUILT_PRODUCTS_DIR}/${FULL_PRODUCT_NAME}">
+               scriptText = "open -a /Applications/Utilities/Terminal.app &quot;${BUILT_PRODUCTS_DIR}/${FULL_PRODUCT_NAME}&quot;">
                <EnvironmentBuildable>
                   <BuildableReference
                      BuildableIdentifier = "primary"
