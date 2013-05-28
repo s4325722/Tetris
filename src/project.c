@@ -17,7 +17,7 @@
 #include <stdint.h>
 #include <ctype.h>
 #include "seven_seg_display.h"
-#include "sprite_display.h";
+#include "sprite_display.h"
 
 #ifdef AVR
 #include <avr/io.h>
@@ -26,6 +26,8 @@
 /* For non AVR build, we remove our interrupt enable */
 #define sei(arg)
 #endif
+
+#include "tetris.h"
 
 /*
  * Function prototypes - these are defined below main()
@@ -40,7 +42,8 @@ void handle_game_paused();
 /*
  * main -- Main program.
  */
-int main(void) {		
+int main(void) {
+    
 	/* Setup all our hardware peripherals and call backs. This 
 	 * will turn on interrupts.
 	 */
@@ -50,10 +53,16 @@ int main(void) {
 	 * message display is complete. 
 	 */
 	splash_screen();
+    
+    tetris_init();
+    //tetris_display();
+    
+    hide_cursor();
+    clear_terminal();
 	
 	/* Play the game - forever */
 	while(1) {
-		new_game();
+//		new_game();
 		play_game();
 		handle_game_over();
 	}
@@ -120,6 +129,7 @@ void play_game(void) {
 		/* We know board_updated is 0 at this point */
 		current_time = get_clock_ticks();
 		if(current_time >= last_piece_drop_time + 1000) {
+            tetris_run();
 			/* Drop a piece every 1000ms. */
 			if(have_current_piece()) {
 				/* Attempt to drop piece by 1 row */
@@ -141,6 +151,8 @@ void play_game(void) {
 				}				
 			}
 		}
+        
+        tetris_display();
         
         input = input_read_char();
 		
@@ -184,7 +196,7 @@ void play_game(void) {
 		
 		if(board_updated) {
 			/* Update display of board since its appearance has changed. */
-			copy_board_to_led_display();
+			//copy_board_to_led_display();
             
 			board_updated = 0;
 		}

@@ -22,6 +22,8 @@
 		258ACF89174355900076F4BD /* timer2.c in Sources */ = {isa = PBXBuildFile; fileRef = 258ACF5E17434C3D0076F4BD /* timer2.c */; };
 		25E2478E17533C5600D1CD3C /* sprite_display.c in Sources */ = {isa = PBXBuildFile; fileRef = 25E2478D17533C5600D1CD3C /* sprite_display.c */; };
 		25E2479117536F9700D1CD3C /* canvas.c in Sources */ = {isa = PBXBuildFile; fileRef = 25E2479017536F9700D1CD3C /* canvas.c */; };
+		25E247941753906500D1CD3C /* tetris.c in Sources */ = {isa = PBXBuildFile; fileRef = 25E247931753906400D1CD3C /* tetris.c */; };
+		25E247971753AA1B00D1CD3C /* tetris_piece.c in Sources */ = {isa = PBXBuildFile; fileRef = 25E247961753AA1A00D1CD3C /* tetris_piece.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -62,6 +64,10 @@
 		25E2478F17533C6300D1CD3C /* sprite_display.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sprite_display.h; sourceTree = "<group>"; };
 		25E2479017536F9700D1CD3C /* canvas.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = canvas.c; sourceTree = "<group>"; };
 		25E2479217536FA200D1CD3C /* canvas.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = canvas.h; sourceTree = "<group>"; };
+		25E247931753906400D1CD3C /* tetris.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tetris.c; sourceTree = "<group>"; };
+		25E247951753909200D1CD3C /* tetris.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = tetris.h; sourceTree = "<group>"; };
+		25E247961753AA1A00D1CD3C /* tetris_piece.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tetris_piece.c; sourceTree = "<group>"; };
+		25E247981753AA2800D1CD3C /* tetris_piece.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = tetris_piece.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -120,6 +126,10 @@
 				25E2478F17533C6300D1CD3C /* sprite_display.h */,
 				25E2479017536F9700D1CD3C /* canvas.c */,
 				25E2479217536FA200D1CD3C /* canvas.h */,
+				25E247931753906400D1CD3C /* tetris.c */,
+				25E247951753909200D1CD3C /* tetris.h */,
+				25E247961753AA1A00D1CD3C /* tetris_piece.c */,
+				25E247981753AA2800D1CD3C /* tetris_piece.h */,
 			);
 			path = src;
 			sourceTree = "<group>";
@@ -216,6 +226,8 @@
 				25043C4A174C90D2005D2025 /* seven_seg_display.c in Sources */,
 				25E2478E17533C5600D1CD3C /* sprite_display.c in Sources */,
 				25E2479117536F9700D1CD3C /* canvas.c in Sources */,
+				25E247941753906500D1CD3C /* tetris.c in Sources */,
+				25E247971753AA1B00D1CD3C /* tetris_piece.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

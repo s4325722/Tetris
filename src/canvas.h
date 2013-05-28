@@ -11,58 +11,68 @@
 #ifndef Tetris_canvas_h
 #define Tetris_canvas_h
 
-struct canvas_t;
-struct canvas_point_t;
-struct canvas_element_t;
-struct canvas_item_t;
-struct canvas_element_filter_t;
-struct canvas_point_value_t;
+typedef struct canvas canvas;
+typedef struct canvas_point canvas_point;
+typedef struct canvas_element canvas_element;
+typedef struct canvas_element_list canvas_element_list;
+typedef struct canvas_element_filter canvas_element_filter;
+typedef struct canvas_point_value canvas_point_value;
 
-struct canvas_item_t* canvas_items_first(struct canvas_item_t* pCanvasItems);
-struct canvas_item_t* canvas_items_last(struct canvas_item_t* pCanvasItems);
-struct canvas_item_t* canvas_items_next(struct canvas_item_t* pCanvasItems);
-void canvas_items_free(struct canvas_item_t* pCanvasItems);
+canvas* canvas_create(uint8_t width, uint8_t height);
+void canvas_destroy(canvas* pCanvas);
+void canvas_render(canvas* pCanvas);
+void canvas_render_list(canvas_element_list* pCanvasItem);
+canvas_element_list* canvas_list_first(canvas_element_list* pCanvasItems);
+canvas_element_list* canvas_list_last(canvas_element_list* pCanvasItems);
+canvas_element_list* canvas_list_next(canvas_element_list* pCanvasItems);
+void canvas_list_free(canvas_element_list* pCanvasItems);
+void canvas_list_elements_free(canvas_element_list* pCanvasItems);
 
-struct canvas_item_t* canvas_elements_filtered(struct canvas_t* pCanvas, struct canvas_element_filter_t* pPredicate);
-int canvas_element_filter_point(struct canvas_element_t* pElement, void* pState);
-int canvas_element_filter_type(struct canvas_element_t* pElement, void* pState);
-int canvas_element_filter_value(struct canvas_element_t* element, void* state);
 
-typedef struct canvas_t {
+canvas_element_list* canvas_element_add(canvas* pCanvas, canvas_element* pElement);
+int canvas_element_remove(canvas* pCanvas, canvas_element* pElement);
+canvas_element_list* canvas_elements_filtered(canvas* pCanvas, canvas_element_filter* pPredicate);
+int canvas_element_filter_point(canvas_element* pElement, void* pState);
+int canvas_element_filter_type(canvas_element* pElement, void* pState);
+int canvas_element_filter_value(canvas_element* element, void* state);
+
+struct canvas {
     uint8_t width;
     uint8_t height;
-    struct canvas_item_t* items;
-} canvas_t;
+    canvas_element_list* items;
+    void (*render) (canvas_element* pElement);
+    char* value;
+};
 
-typedef struct canvas_point_t {
+struct canvas_point {
     uint8_t x;
     uint8_t y;
-} canvas_point_t;
+};
 
-typedef struct canvas_point_value_t {
-    canvas_point_t point;
+struct canvas_point_value {
+    canvas_point point;
     char value;
-} canvas_point_value_t;
+};
 
-typedef struct canvas_element_t {
-    canvas_t canvas;
-    canvas_point_t position;
+struct canvas_element {
+    canvas* canvas;
+    canvas_point position;
     uint8_t width;
     uint8_t height;
     uint8_t type;
-    char** element;
-} canvas_element_t;
+    char* value;
+};
 
-typedef struct canvas_element_filter_t {
+struct canvas_element_filter {
     void* state;
-    int (*predicate) (canvas_element_t* pElement, void* state);
-    struct canvas_element_filter_t* next;
-} canvas_element_filter_t;
+    int (*predicate) (canvas_element* pElement, void* state);
+    canvas_element_filter* next;
+};
 
-typedef struct canvas_item_t {
-    struct canvas_item_t* previous;
-    struct canvas_item_t* next;
-    canvas_element_t element;
-} canvas_item_t;
+struct canvas_element_list {
+    canvas_element_list* previous;
+    canvas_element_list* next;
+    canvas_element* element;
+};
 
 #endif
