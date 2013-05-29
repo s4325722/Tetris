@@ -14,8 +14,63 @@
 #include "tetris_piece.h"
 #include "canvas.h"
 
-const uint8_t TETRIS_ELEMENT_BACKGROUND = 0;
-const uint8_t TETRIS_ELEMENT_PIECE = 1;
+tetris_game_state* tetris_state_splash(tetris_game* pGame);
+
+tetris_game* tetris_game_create(){
+    tetris_game* pGame = malloc(sizeof(tetris_game));
+    
+    // Set up the game settings
+    pGame->settings = (tetris_game_settings){
+        1, // First level
+        3, // Last level
+        1, // Score multiplier (score *= level*multiplier)
+        1  // Speed multiplier (speed *- level*multiplier)
+    };
+    
+    // Set up the first level
+    pGame->level = (tetris_game_level){
+        1, // The initial level is 1
+        pGame->settings.level_score_multiplier * 1, // The initial score multiplier
+        pGame->settings.level_speed_multiplier * 1  // The initial speed multiplier
+    };
+    
+    // Set the initial game state (splash screen)
+    pGame->state = (tetris_game_state){Splash, &tetris_state_splash};
+    
+    // Set the game canvas
+    pGame->canvas = canvas_create(TETRIS_GAME_WIDTH, TETRIS_GAME_HEIGHT);
+    
+    // Set the base piece (background)
+    pGame->base_element = tetris_piece_to_element(TETRIS_PIECE_BASE);
+    
+    // Set the current piece (nothing)
+    pGame->current_element = NULL;
+    
+    return pGame;
+}
+
+void tetris_game_destory(tetris_game* pGame){
+    canvas_destroy(pGame->canvas); // This frees all elements on the canvas too
+    free(pGame);
+}
+
+void tetris_run(tetris_game* pGame){
+    tetris_game_state* next = pGame->state.next(pGame);
+    
+    if(next != NULL)
+        pGame->state = *next;
+}
+
+tetris_game_state* tetris_state_splash(tetris_game* pGame){
+    printf("Splash screen");
+    
+    return &pGame->state;
+}
+
+void tetris_state_play(tetris_game* pGame){
+    printf("Play");
+    
+}
 
 //tetris_t game = {NULL};
 //tetris_t* pGame = &(tetris_t){NULL};
@@ -34,7 +89,7 @@ void tetris_init(){
     //canvas_t canvas = *canvas_create(7, 15);
     //canvas_t canvas = *pCanvas;
     //pGame->canvas = pCanvas;
-    canvas_element* element = tetris_piece_to_canvas_element(TETRIS_PIECE_ANY);
+    canvas_element* element = tetris_piece_to_element(TETRIS_PIECE_ANY);
     //pTestElement = canvas_element_add(pGame->canvas, element);
     pTestElement = canvas_element_add(pGame->canvas, element);
     pTestElement->element->canvas = pGame->canvas;
@@ -113,8 +168,6 @@ void tetris_display_terminal(){
     uint8_t display_width = width * 2;
     uint8_t display_height = height;
     uint8_t padding = 0;
-    //char (*pCanvasValue)[canvas.height][canvas.width] = &canvas.value;
-    //char (*pCanvasValue)[canvas.width] = canvas.value;
     
 	int startX = 25;
 	int startY = 4;
@@ -132,9 +185,6 @@ void tetris_display_terminal(){
         for(int j = 0; j < width; j++){
             if(pCanvasValue[i][j] == ' ')
                 set_display_attribute(46);
-
-            //if(pCanvas->value[(i * pCanvas->width) + j] == ' ')
-           //     set_display_attribute(46);
             
             printf(" ");
             printf(" ");

@@ -29,7 +29,7 @@ int canvas_list_count(canvas_element_list* pElementList);
 void canvas_list_free(canvas_element_list* pCanvasItems);
 void canvas_list_elements_free(canvas_element_list* pCanvasItems);
 
-
+canvas_element* canvas_element_create(canvas* pCanvas, uint8_t width, uint8_t height, char value);
 canvas_element_list* canvas_element_add(canvas* pCanvas, canvas_element* pElement);
 int canvas_element_remove(canvas* pCanvas, canvas_element* pElement);
 canvas_element_list* canvas_elements_filtered(canvas* pCanvas, canvas_element_filter* pPredicate);

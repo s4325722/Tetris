@@ -16,14 +16,22 @@
 
 typedef struct tetris_piece tetris_piece;
 
+typedef enum TETRIS_PIECE_TYPE {
+    Base,
+    Any
+} TETRIS_PIECE_TYPE;
+
 struct tetris_piece {
+    TETRIS_PIECE_TYPE type;
     uint8_t width;
     uint8_t height;
     char* value;
 };
 
+tetris_piece* TETRIS_PIECE_BASE;
+
 tetris_piece* TETRIS_PIECE_ANY;
 
-canvas_element* tetris_piece_to_canvas_element(tetris_piece* pTetrisPiece);
+canvas_element* tetris_piece_to_element(tetris_piece* pTetrisPiece);
 
 #endif
