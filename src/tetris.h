@@ -19,6 +19,12 @@ void tetris_init();
 void tetris_run();
 void tetris_display();
 
+typedef enum TETRIS_MOVE_DIRECTION {
+    LEFT,
+    RIGHT,
+    DOWN
+} TETRIS_MOVE_DIRECTION;
+
 typedef struct tetris_t {
     struct canvas* canvas;
 } tetris_t;

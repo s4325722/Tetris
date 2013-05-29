@@ -18,8 +18,8 @@ canvas* canvas_create(uint8_t width, uint8_t height){
     pCanvas->width = width;
     pCanvas->height = height;
     pCanvas->items = NULL;
-//    pCanvas->value = (char*)calloc('\0', sizeof(char) * width * height);
-    pCanvas->value = malloc(sizeof(char*) * width * height);
+    pCanvas->value = (char*)calloc(width * height, sizeof(char*));
+    //pCanvas->value = malloc(sizeof(char*) * width * height);
     pCanvas->render = &canvas_render_default;
 
     printf("allocating: %d (char is %ld)", width * height, sizeof(char));
@@ -41,9 +41,9 @@ void canvas_render(canvas* pCanvas){
     if(pCanvas == NULL)
         return;
     
-    //memset(pCanvas->value, '\0', pCanvas->width * pCanvas->height);
-    free(pCanvas->value);
-    pCanvas->value = malloc(sizeof(char*) * pCanvas->width * pCanvas->height);
+    memset(pCanvas->value, '\0', sizeof(char*) * pCanvas->width * pCanvas->height);
+    //free(pCanvas->value);
+    //pCanvas->value = malloc(sizeof(char*) * pCanvas->width * pCanvas->height);
     canvas_element_list* pCurrentItem = pCanvas->items;
     
     while(pCurrentItem != NULL){
@@ -54,36 +54,55 @@ void canvas_render(canvas* pCanvas){
 
 void canvas_render_default(canvas_element* pElement){
     canvas* pCanvas = pElement->canvas;
-    uint8_t size = pCanvas->width * pCanvas->height;
-    uint8_t canvas_row;
-    uint8_t element_row;
-    uint8_t canvas_col;
-    uint8_t element_col;
+    char (*pCanvasValue)[pCanvas->width] = (char(*)[pCanvas->width])pCanvas->value;
+    char (*pElementValue)[pElement->width] = (char(*)[pElement->width])pElement->value;
     
     for(int i = 0; i < pElement->height; i++){
-        canvas_col = pElement->position.y + i * pCanvas->width;
-        element_col = i * pElement->width;
+        uint8_t y = pElement->position.y + i;
+        
+        if(y >= pCanvas->height)
+            y = y % (pCanvas->height);
         
         for(int j = 0; j < pElement->width; j++){
-            canvas_row = pElement->position.x + j;
-            element_row = j;
-        }
-        
-        pCanvas->value[canvas_col + canvas_row] = ' ';
-    }
-    
-    
-    for(int i = pElement->position.y; i < pElement->height + pElement->position.y; i++){
-        for(int j = pElement->position.x; j < pElement->width + pElement->position.x; j++){
-            uint8_t canvasOffset = (pCanvas->width * i) + j;
-            uint8_t elementOffset = (pElement->width * i) + j;
+            uint8_t x = pElement->position.x + j;
             
-            if(canvasOffset >= size - 1)
-                canvasOffset -= size;
+            if(x >= pCanvas->width)
+                x = x % (pCanvas->width);
             
-            pCanvas->value[canvasOffset] = ' ';
+            pCanvasValue[y][x] = pElementValue[i][j];
         }
     }
+    
+//    uint8_t size = pCanvas->width * pCanvas->height;
+//    uint8_t canvas_row;
+//    uint8_t element_row;
+//    uint8_t canvas_col;
+//    uint8_t element_col;
+//    
+//    for(int i = 0; i < pElement->height; i++){
+//        canvas_col = pElement->position.y + i * pCanvas->width;
+//        element_col = i * pElement->width;
+//        
+//        for(int j = 0; j < pElement->width; j++){
+//            canvas_row = pElement->position.x + j;
+//            element_row = j;
+//        }
+//        
+//        pCanvas->value[canvas_col + canvas_row] = ' ';
+//    }
+//    
+//    
+//    for(int i = pElement->position.y; i < pElement->height + pElement->position.y; i++){
+//        for(int j = pElement->position.x; j < pElement->width + pElement->position.x; j++){
+//            uint8_t canvasOffset = (pCanvas->width * i) + j;
+//            uint8_t elementOffset = (pElement->width * i) + j;
+//            
+//            if(canvasOffset >= size - 1)
+//                canvasOffset -= size;
+//            
+//            pCanvas->value[canvasOffset] = ' ';
+//        }
+//    }
     
     return;
 }
@@ -147,12 +166,12 @@ canvas_element_list* canvas_items_next(canvas_element_list* pCanvasItems){
     return pCanvasItems->next;
 }
 
-int canvas_items_count(canvas* pCanvas){
-    if(pCanvas == NULL)
-        return 0;
+int canvas_list_count(canvas_element_list* pElementList){
+    if(pElementList == NULL)
+        return -1;
     
     int count = 0;
-    canvas_element_list* pCurrentItem = pCanvas->items;
+    canvas_element_list* pCurrentItem = pElementList;
     
     if(pCurrentItem == NULL)
         return 0;
@@ -163,6 +182,10 @@ int canvas_items_count(canvas* pCanvas){
     }
     
     return count;
+}
+
+int canvas_items_count(canvas* pCanvas){
+    return canvas_list_count(pCanvas->items);
 }
 
 canvas_element_list* canvas_element_add(canvas* pCanvas, canvas_element* pElement){

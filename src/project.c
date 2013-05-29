@@ -129,7 +129,6 @@ void play_game(void) {
 		/* We know board_updated is 0 at this point */
 		current_time = get_clock_ticks();
 		if(current_time >= last_piece_drop_time + 1000) {
-            tetris_run();
 			/* Drop a piece every 1000ms. */
 			if(have_current_piece()) {
 				/* Attempt to drop piece by 1 row */
@@ -139,6 +138,7 @@ void play_game(void) {
 					fix_piece_to_board();
 					board_updated = 1;
 				}
+                tetris_run();
 				last_piece_drop_time = current_time;
 			} else {
 				/* No current piece - add one */
@@ -151,8 +151,6 @@ void play_game(void) {
 				}				
 			}
 		}
-        
-        tetris_display();
         
         input = input_read_char();
 		
@@ -197,7 +195,7 @@ void play_game(void) {
 		if(board_updated) {
 			/* Update display of board since its appearance has changed. */
 			//copy_board_to_led_display();
-            
+            tetris_display();
 			board_updated = 0;
 		}
 	}
@@ -227,7 +225,7 @@ void handle_game_over(void) {
     if(points == 1)
         plural = '\0';
     
-    sprintf(score, "[%d] Point%s", get_score(), plural);
+    //sprintf(score, "[%d] Point%s", get_score(), plural);
 
     init_board();
     set_scrolling_display_text(score);

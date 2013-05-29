@@ -14,8 +14,16 @@
 
 #define TETRIS_PIECE_DIMENSION 3
 
-char* TETRIS_PIECE_PLUS;
+typedef struct tetris_piece tetris_piece;
 
-struct canvas_element* tetris_piece_to_canvas_element(char* pTetrisPiece);
+struct tetris_piece {
+    uint8_t width;
+    uint8_t height;
+    char* value;
+};
+
+tetris_piece* TETRIS_PIECE_ANY;
+
+canvas_element* tetris_piece_to_canvas_element(tetris_piece* pTetrisPiece);
 
 #endif
