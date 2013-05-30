@@ -240,11 +240,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "src/canvas.c"
-         timestampString = "391588541.875185"
+         timestampString = "391598736.901058"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "107"
-         endingLineNumber = "107"
+         startingLineNumber = "77"
+         endingLineNumber = "77"
          landmarkName = "canvas_render_default()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -318,11 +318,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "src/canvas.c"
-         timestampString = "391588541.875185"
+         timestampString = "391598736.901058"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "72"
-         endingLineNumber = "72"
+         startingLineNumber = "73"
+         endingLineNumber = "73"
          landmarkName = "canvas_render_default()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -355,11 +355,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "src/canvas.c"
-         timestampString = "391588541.875185"
+         timestampString = "391598736.901058"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "73"
-         endingLineNumber = "73"
+         startingLineNumber = "74"
+         endingLineNumber = "74"
          landmarkName = "canvas_render_default()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -498,11 +498,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "src/canvas.c"
-         timestampString = "391590428.10069"
+         timestampString = "391598736.901058"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "345"
-         endingLineNumber = "345"
+         startingLineNumber = "315"
+         endingLineNumber = "315"
          landmarkName = "canvas_elements_filtered()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -524,11 +524,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "src/canvas.c"
-         timestampString = "391590428.10069"
+         timestampString = "391598736.901058"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "349"
-         endingLineNumber = "349"
+         startingLineNumber = "319"
+         endingLineNumber = "319"
          landmarkName = "canvas_elements_filtered()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -537,11 +537,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "src/canvas.c"
-         timestampString = "391590428.10069"
+         timestampString = "391598736.901058"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "341"
-         endingLineNumber = "341"
+         startingLineNumber = "311"
+         endingLineNumber = "311"
          landmarkName = "canvas_elements_filtered()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -550,11 +550,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "src/canvas.c"
-         timestampString = "391590428.10069"
+         timestampString = "391598736.901058"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "355"
-         endingLineNumber = "355"
+         startingLineNumber = "325"
+         endingLineNumber = "325"
          landmarkName = "canvas_elements_filtered()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -563,11 +563,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "src/canvas.c"
-         timestampString = "391590428.10069"
+         timestampString = "391598736.901058"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "353"
-         endingLineNumber = "353"
+         startingLineNumber = "323"
+         endingLineNumber = "323"
          landmarkName = "canvas_elements_filtered()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -719,11 +719,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "src/canvas.c"
-         timestampString = "391590428.10069"
+         timestampString = "391598736.901058"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "347"
-         endingLineNumber = "347"
+         startingLineNumber = "317"
+         endingLineNumber = "317"
          landmarkName = "canvas_elements_filtered()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -732,11 +732,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "src/canvas.c"
-         timestampString = "391590428.10069"
+         timestampString = "391598736.901058"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "352"
-         endingLineNumber = "352"
+         startingLineNumber = "322"
+         endingLineNumber = "322"
          landmarkName = "canvas_elements_filtered()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -1004,32 +1004,6 @@
          shouldBeEnabled = "No"
          ignoreCount = "0"
          continueAfterRunningActions = "No"
-         filePath = "src/tetris_piece.c"
-         timestampString = "391595153.14709"
-         startingColumnNumber = "9223372036854775807"
-         endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "138"
-         endingLineNumber = "138"
-         landmarkName = "tetris_glyph_to_element()"
-         landmarkType = "7">
-      </FileBreakpoint>
-      <FileBreakpoint
-         shouldBeEnabled = "No"
-         ignoreCount = "0"
-         continueAfterRunningActions = "No"
-         filePath = "src/tetris_piece.c"
-         timestampString = "391595153.14709"
-         startingColumnNumber = "9223372036854775807"
-         endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "136"
-         endingLineNumber = "136"
-         landmarkName = "tetris_glyph_to_element()"
-         landmarkType = "7">
-      </FileBreakpoint>
-      <FileBreakpoint
-         shouldBeEnabled = "No"
-         ignoreCount = "0"
-         continueAfterRunningActions = "No"
          filePath = "src/tetris_state_lose.c"
          timestampString = "391593629.080457"
          startingColumnNumber = "9223372036854775807"
@@ -1128,6 +1102,45 @@
          startingLineNumber = "111"
          endingLineNumber = "111"
          landmarkName = "tetris_state_play()"
+         landmarkType = "7">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "No"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         filePath = "src/tetris_piece.c"
+         timestampString = "391596945.414644"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "143"
+         endingLineNumber = "143"
+         landmarkName = "tetris_glyph_to_element()"
+         landmarkType = "7">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "No"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         filePath = "src/tetris_display.c"
+         timestampString = "391598736.901058"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "58"
+         endingLineNumber = "58"
+         landmarkName = "tetris_game_display()"
+         landmarkType = "7">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "No"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         filePath = "src/tetris_piece.c"
+         timestampString = "391598124.639095"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "158"
+         endingLineNumber = "158"
+         landmarkName = "tetris_piece_colourise()"
          landmarkType = "7">
       </FileBreakpoint>
    </FileBreakpoints>

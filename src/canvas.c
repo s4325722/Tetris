@@ -69,7 +69,8 @@ void canvas_render_default(canvas_element* pElement){
             if(x >= pCanvas->width)
                 x = x % (pCanvas->width);
             
-            pCanvasValue[y][x] |= pElementValue[i][j];
+            if(pCanvasValue[y][x] == '\0')
+                pCanvasValue[y][x] = pElementValue[i][j];
         }
     }
     

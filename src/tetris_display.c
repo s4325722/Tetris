@@ -13,6 +13,17 @@
 
 #ifndef AVR
 
+uint8_t colour_for_vt100(char value){
+    //    41	Red
+    //    42	Green
+    //    43	Yellow
+    //    44	Blue
+    //    45	Magenta
+    //    46	Cyan
+    
+    return value / 21 + 41;
+}
+
 void tetris_game_display(tetris_game* pGame){
     if(!pGame->updated){
         return;
@@ -43,8 +54,8 @@ void tetris_game_display(tetris_game* pGame){
         move_cursor(startX, startY + i);
         
         for(int j = 0; j < width; j++){
-            if(pCanvasValue[i][j] == ' ')
-                set_display_attribute(46);
+            if(pCanvasValue[i][j] != '\0')
+                set_display_attribute(colour_for_vt100(pCanvasValue[i][j]));
             
             printf(" ");
             printf(" ");

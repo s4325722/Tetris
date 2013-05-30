@@ -12,6 +12,7 @@
 #include <stdint.h>
 #include "canvas.h"
 
+#define TETRIS_PIECE_COLOURISE 1;
 #define TETRIS_PIECE_DIMENSION 3
 
 typedef struct tetris_piece tetris_piece;

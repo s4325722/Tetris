@@ -13,8 +13,10 @@
 #include "tetris.h"
 #include "tetris_piece.h"
 
+uint8_t tetris_piece_colourise(canvas_element* pPieceElement);
+
 char TETRIS_CHAR_SINGLE[][3] = {
-    {'\0',  ' ', '\0'},
+    {'\0', '\0', '\0'},
     {'\0' , ' ' ,'\0'},
     {'\0', '\0', '\0'},
 };
@@ -37,9 +39,9 @@ char TETRIS_CHAR_SQUARE[][2] = {
 };
 
 const char TETRIS_CHAR_T[][3] = {
-    {' ' , ' ', ' '},
+    {' ' , ' ',  ' '},
     {'\0', ' ', '\0'},
-    {'\0', ' ', '\0'},
+    {'\0', '\0','\0'},
 };
 
 char TETRIS_CHAR_L[][3] = {
@@ -125,15 +127,33 @@ found:
 
 canvas_element* tetris_glyph_to_element(tetris_piece* pTetrisPiece){
     int size = pTetrisPiece->width * pTetrisPiece->height * (int)sizeof(char);
-    canvas_element* pCanvasElement = (canvas_element*)calloc(1, sizeof(canvas_element));
-    pCanvasElement->width = pTetrisPiece->width;
-    pCanvasElement->height = pTetrisPiece->height;
-    pCanvasElement->type = pTetrisPiece->type;
-    pCanvasElement->position.x = 0;
-    pCanvasElement->position.y = 0;
-    pCanvasElement->visible = 1;
-    pCanvasElement->value = malloc(size);
-    memcpy(pCanvasElement->value, pTetrisPiece->value, size);
+    canvas_element* pPieceElement = (canvas_element*)calloc(1, sizeof(canvas_element));
+    pPieceElement->width = pTetrisPiece->width;
+    pPieceElement->height = pTetrisPiece->height;
+    pPieceElement->type = pTetrisPiece->type;
+    pPieceElement->position.x = 0;
+    pPieceElement->position.y = 0;
+    pPieceElement->visible = 1;
+    pPieceElement->value = malloc(size);
+    memcpy(pPieceElement->value, pTetrisPiece->value, size);
     
-    return pCanvasElement;
+#ifndef AVR
+    char colourise = TETRIS_PIECE_COLOURISE;
+    if(colourise)
+        tetris_piece_colourise(pPieceElement);
+#endif
+    
+    return pPieceElement;
+}
+
+uint8_t tetris_piece_colourise(canvas_element* pPieceElement){
+    char colour = 1 + ((double)rand() / (double)RAND_MAX) * 126;
+    char (*pValue)[pPieceElement->width] = (char(*)[pPieceElement->width])pPieceElement->value;
+    
+    for(int y = 0; y < pPieceElement->height; y++)
+        for(int x = 0; x < pPieceElement->width; x++)
+            if(pValue[y][x] == ' ')
+                pValue[y][x] = colour;
+    
+    return colour;
 }
