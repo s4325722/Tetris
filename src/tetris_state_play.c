@@ -7,67 +7,242 @@
 //
 
 #include <stdio.h>
+#include <stdlib.h>
 #include "timer2.h"
+#include "canvas.h"
+#include "tetris.h"
+#include "tetris_piece.h"
 #include "tetris_input.h"
-#include "tetris_state_play.h"
 
 static uint32_t ticks;
 static uint32_t ticks_last_dropped;
 
-tetris_game_state* tetris_state_play(tetris_game* pGame){
+typedef enum movement_direction {
+    MOVE_NONE,
+    MOVE_LEFT,
+    MOVE_RIGHT,
+    MOVE_DOWN
+} movement_direction;
+
+typedef enum movement_result {
+    COLLIDED_NONE,
+    COLLIDED_EDGE,
+    COLLIDED_PIECE,
+    COLLIDED_BASE
+} movement_result;
+
+typedef struct collision_test_state {
+    canvas_point* position;
+    canvas_element* search;
+} collision_test_state;
+
+movement_result try_move_piece(canvas_element* pPieceElement, movement_direction direction);
+movement_result collision_test(canvas_element* pPieceElement, canvas_point* pPosition);
+int collision_test_predicate(canvas_element* pElement, void* pState);
+void merge_piece(canvas_element* pSrcElement, canvas_element* pDstElement);
+
+
+tetris_game_state* tetris_state_play(tetris_game* pGame){    
     ticks = get_clock_ticks();
-    // set up speed here;
-    uint16_t speed = 1000;
+    char is_canvas_dirty = 0;
+    char is_game_over = 0;
     
-    if(ticks < ticks_last_dropped + speed)
-        return NULL;
-        
     if(pGame->current_element != NULL){
-        
+        movement_direction movement = MOVE_NONE;
+            
+        switch(pGame->command){
+            case CMD_ROTATE:
+                
+                break;
+            case CMD_MOVE_LEFT:
+                movement = MOVE_LEFT;
+                break;
+            case CMD_MOVE_RIGHT:
+                movement = MOVE_RIGHT;
+                break;
+            case CMD_MOVE_DOWN:
+                movement = MOVE_DOWN;
+                ticks_last_dropped = get_clock_ticks();
+                break;
+            default:
+                // If we're not doing anything else, we should be dropping the piece
+                if(ticks >= ticks_last_dropped + pGame->settings.speed){
+                    movement = MOVE_DOWN;
+                    ticks_last_dropped = get_clock_ticks();
+                }
+        }
+
+        if(movement != MOVE_NONE){
+            switch(try_move_piece(pGame->current_element, movement)){
+                case COLLIDED_NONE:
+                    is_canvas_dirty = 1;
+                    break;
+                case COLLIDED_EDGE:
+                case COLLIDED_PIECE:
+                    is_canvas_dirty = 1;
+                    // play beep sound
+                    break;
+                case COLLIDED_BASE:
+                    if(movement != MOVE_DOWN){
+                        // play beep sound
+                    }else{
+                        is_canvas_dirty = 1;
+                        // Special case, the element is at the top of the board
+                        if(pGame->current_element->position.y == 0){
+                            printf("current position %d", pGame->current_element->position.y);
+                            is_game_over = 1;
+                        }
+                        
+                        // Copy to base element
+                        merge_piece(pGame->current_element, pGame->base_element);
+                        // Then clean up
+                        canvas_element_remove(pGame->canvas, pGame->current_element);
+                        canvas_element_free(pGame->current_element);
+                        //free(pGame->current_element);
+                        pGame->current_element = NULL;
+                    }
+                    break;
+            }
+        }
     }else{
+        int pieces_count = sizeof(TETRIS_PIECES) / sizeof(tetris_piece*);
+        int random_piece_index = ((double)rand() / (double)RAND_MAX) * (pieces_count - 1);
+        //int random_piece_index = 0;
+        canvas_element* pNewEelement = tetris_glyph_to_element(TETRIS_PIECES[random_piece_index]);
+        pGame->current_element = canvas_element_add(pGame->canvas, pNewEelement);
+        ticks_last_dropped = get_clock_ticks();
+        is_canvas_dirty = 1;
         
+        if(collision_test(pGame->current_element, &pGame->current_element->position) != COLLIDED_NONE)
+            is_game_over = 1;
     }
+    
+    if(is_canvas_dirty){
+        canvas_render(pGame->canvas);
+        pGame->updated = 1;
+    }
+    
+    if(is_game_over)
+        
+        return game_state[(TETRIS_STATE_TYPE)Lose];
     
     return NULL;
 }
 
-int tetris_move_piece(canvas_element* pPieceElement, TETRIS_MOVE_DIRECTION direction){
+movement_result try_move_piece(canvas_element* pPieceElement, movement_direction direction){
     canvas_point position = (canvas_point){pPieceElement->position.x, pPieceElement->position.y};
     
+    // Test to make sure it's not on an edge first.
     switch(direction){
-        case LEFT:
+        case MOVE_LEFT:
+            if(position.x - 1 + tetris_element_edge(pPieceElement, SIDE_LEFT) <= 0)
+                return COLLIDED_EDGE;
             position.x--;
             break;
-        case RIGHT:
+        case MOVE_RIGHT:
+            if(position.x + 1 + tetris_element_edge(pPieceElement, SIDE_RIGHT) >= pPieceElement->canvas->width)
+                return COLLIDED_EDGE;
             position.x++;
-            pPieceElement->position.x++;
             break;
-        case DOWN:
+        case MOVE_DOWN:
+            if(position.y + tetris_element_edge(pPieceElement, SIDE_BOTTOM) >= pPieceElement->canvas->height - 1)
+                return COLLIDED_BASE;
             position.y++;
-            pPieceElement->position.y++;
             break;
+        default: ;
     }
     
-    if(tetris_collision_test(pPieceElement, &position) == 0){
+    // Do collision test
+    movement_result result = collision_test(pPieceElement, &position);
+    
+    if(result == COLLIDED_NONE){
         pPieceElement->position.x = position.x;
         pPieceElement->position.y = position.y;
     }
-    
-    return -1;
+
+    return result;
 }
 
-int tetris_collision_test(canvas_element* pPieceElement, canvas_point* pPosition){
-    canvas* pCanvas = pPieceElement->canvas;
-    canvas_point_value point_value = (canvas_point_value){*pPosition, ' '};
-    int collisions = 0;
+movement_result collision_test(canvas_element* pPieceElement, canvas_point* position){
+    collision_test_state test_state = (collision_test_state){position, pPieceElement};
+    canvas_element_filter filter = (canvas_element_filter){
+        &test_state, &collision_test_predicate, NULL
+    };
+    //canvas_element_filter* pFilter = calloc(1, sizeof(canvas_element_filter));
+    //pFilter->next = NULL;
+    //pFilter->state = &test_state;
+    //pFilter->predicate = &collision_test_predicate;
     
-    for(int y = pPosition->y; y < pPieceElement->height ;y++){
-        for(int x = pPosition->x; x < pPieceElement->width; x++){
-            canvas_element_list* pElements = canvas_elements_value_at_point(pCanvas, &point_value);
-            collisions += canvas_list_count(pElements);
-            canvas_list_free(pElements);
+    //canvas_element_filter* filter = &(canvas_element_filter){&collision_test_predicate, (void*)&test_state};
+    
+    canvas_element_list* pCollisions = canvas_elements_filtered(pPieceElement->canvas, &filter);
+    movement_result result = COLLIDED_NONE;
+    
+    if(canvas_list_count(pCollisions)){
+        result = COLLIDED_PIECE;
+        
+        do{
+            if(pCollisions->element->type == PIECE_TYPE_BASE){
+                result = COLLIDED_BASE;
+                break;
+            }
+        }while(canvas_list_next(&pCollisions) != NULL);
+    }
+    
+    canvas_list_free(pCollisions);
+    
+    return result;
+}
+
+int collision_test_predicate(canvas_element* pElement, void* pState){
+    collision_test_state* pTestState = (collision_test_state*)pState;
+    canvas_element* pSearchElement = pTestState->search;
+    
+    if(pElement == pSearchElement)
+        return 0;
+    
+    char (*pSearchValue)[pSearchElement->width] = (char(*)[pSearchElement->width])pSearchElement->value;
+    char (*pElementValue)[pElement->width] = (char(*)[pElement->width])pElement->value;
+    
+    for(int y = 0; y < pSearchElement->height; y++){
+        uint8_t cmpY = pTestState->position->y + y;
+        
+        if(cmpY < pElement->position.y || cmpY > pElement->position.y + pElement->height)
+            continue;
+        
+        for(int x = 0; x < pSearchElement->width; x++){
+            uint8_t cmpX = pTestState->position->x + x;
+            
+            if(cmpX < pElement->position.x || cmpX > pElement->position.x + pElement->width)
+                continue;
+            
+            if(pSearchValue[y][x] != '\0' && pElementValue[cmpY][cmpX] != '\0')
+                return 1;
         }
     }
     
-    return collisions;
+    return 0;
+}
+
+
+void merge_piece(canvas_element* pSrcElement, canvas_element* pDstElement){
+    char (*pDstValue)[pDstElement->width] = (char(*)[pDstElement->width])pDstElement->value;
+    char (*pSrcValue)[pSrcElement->width] = (char(*)[pSrcElement->width])pSrcElement->value;
+    
+    for(int i = 0; i < pSrcElement->height; i++){
+        uint8_t y = pSrcElement->position.y + i;
+        
+        if(y >= pDstElement->height)
+            y = y % (pDstElement->height);
+        
+        for(int j = 0; j < pSrcElement->width; j++){
+            uint8_t x = pSrcElement->position.x + j;
+            
+            if(x >= pDstElement->width)
+                x = x % (pDstElement->width);
+            
+            if(!pDstValue[y][x])
+                pDstValue[y][x] = pSrcValue[i][j];
+        }
+    }
 }

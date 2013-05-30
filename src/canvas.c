@@ -14,15 +14,12 @@
 void canvas_render_default(canvas_element* pElement);
 
 canvas* canvas_create(uint8_t width, uint8_t height){
-    canvas* pCanvas = (canvas*)malloc(sizeof(canvas));
+    canvas* pCanvas = (canvas*)calloc(1, sizeof(canvas));
     pCanvas->width = width;
     pCanvas->height = height;
     pCanvas->items = NULL;
     pCanvas->value = (char*)calloc(width * height, sizeof(char*));
-    //pCanvas->value = malloc(sizeof(char*) * width * height);
     pCanvas->render = &canvas_render_default;
-
-    printf("allocating: %d (char is %ld)", width * height, sizeof(char));
     
     return pCanvas;
 }
@@ -57,6 +54,9 @@ void canvas_render_default(canvas_element* pElement){
     char (*pCanvasValue)[pCanvas->width] = (char(*)[pCanvas->width])pCanvas->value;
     char (*pElementValue)[pElement->width] = (char(*)[pElement->width])pElement->value;
     
+    if(!pElement->visible)
+        return;
+    
     for(int i = 0; i < pElement->height; i++){
         uint8_t y = pElement->position.y + i;
         
@@ -69,42 +69,19 @@ void canvas_render_default(canvas_element* pElement){
             if(x >= pCanvas->width)
                 x = x % (pCanvas->width);
             
-            pCanvasValue[y][x] = pElementValue[i][j];
+            pCanvasValue[y][x] |= pElementValue[i][j];
         }
     }
     
-//    uint8_t size = pCanvas->width * pCanvas->height;
-//    uint8_t canvas_row;
-//    uint8_t element_row;
-//    uint8_t canvas_col;
-//    uint8_t element_col;
-//    
-//    for(int i = 0; i < pElement->height; i++){
-//        canvas_col = pElement->position.y + i * pCanvas->width;
-//        element_col = i * pElement->width;
-//        
-//        for(int j = 0; j < pElement->width; j++){
-//            canvas_row = pElement->position.x + j;
-//            element_row = j;
-//        }
-//        
-//        pCanvas->value[canvas_col + canvas_row] = ' ';
-//    }
-//    
-//    
-//    for(int i = pElement->position.y; i < pElement->height + pElement->position.y; i++){
-//        for(int j = pElement->position.x; j < pElement->width + pElement->position.x; j++){
-//            uint8_t canvasOffset = (pCanvas->width * i) + j;
-//            uint8_t elementOffset = (pElement->width * i) + j;
-//            
-//            if(canvasOffset >= size - 1)
-//                canvasOffset -= size;
-//            
-//            pCanvas->value[canvasOffset] = ' ';
-//        }
-//    }
-    
     return;
+}
+
+void canvas_element_free(canvas_element* pElement){
+    if(pElement == NULL)
+        return;
+    
+    free(pElement->value);
+    free(pElement);
 }
 
 void canvas_list_elements_free(canvas_element_list* pCanvasItems){
@@ -115,10 +92,11 @@ void canvas_list_elements_free(canvas_element_list* pCanvasItems){
     
     pCurrentItem = canvas_list_first(pCurrentItem);
     
-    do{
+    while(pCurrentItem != NULL){
+        canvas_element_free(pCurrentItem->element);
+        //free(pCurrentItem->element);
         pCurrentItem = pCurrentItem->next;
-        free(&pCurrentItem->element);
-    }while(pCurrentItem != NULL);
+    };
 }
 
 void canvas_list_free(canvas_element_list* pCanvasItems){
@@ -129,10 +107,11 @@ void canvas_list_free(canvas_element_list* pCanvasItems){
     
     pCurrentItem = canvas_list_first(pCurrentItem);
     
-    do{
+    while(pCurrentItem != NULL){
+        canvas_element_list* pTmp = pCurrentItem;
         pCurrentItem = pCurrentItem->next;
-        free(pCurrentItem);
-    }while(pCurrentItem != NULL);
+        free(pTmp);
+    }
 }
 
 canvas_element_list* canvas_list_first(canvas_element_list* pCanvasItems){
@@ -159,22 +138,21 @@ canvas_element_list* canvas_list_last(canvas_element_list* pCanvasItems){
     return pCurrentItem;
 }
 
-canvas_element_list* canvas_items_next(canvas_element_list* pCanvasItems){
-    if(pCanvasItems == NULL)
+canvas_element_list* canvas_list_next(canvas_element_list** ppCanvasItems){
+    if(ppCanvasItems == NULL)
         return NULL;
+
+    *ppCanvasItems = (*ppCanvasItems)->next;
     
-    return pCanvasItems->next;
+    return *ppCanvasItems;
 }
 
 int canvas_list_count(canvas_element_list* pElementList){
     if(pElementList == NULL)
-        return -1;
+        return 0;
     
     int count = 0;
     canvas_element_list* pCurrentItem = pElementList;
-    
-    if(pCurrentItem == NULL)
-        return 0;
     
     while(pCurrentItem != NULL){
         count++;
@@ -188,13 +166,13 @@ int canvas_items_count(canvas* pCanvas){
     return canvas_list_count(pCanvas->items);
 }
 
-canvas_element_list* canvas_element_add(canvas* pCanvas, canvas_element* pElement){
+canvas_element* canvas_element_add(canvas* pCanvas, canvas_element* pElement){
     if(pElement == NULL || pCanvas == NULL)
         return NULL;
     
     canvas** ppCanvas = &pElement->canvas;
     *ppCanvas = pCanvas;
-    canvas_element_list* pElmentList = (canvas_element_list*)malloc(sizeof(canvas_element_list));
+    canvas_element_list* pElmentList = (canvas_element_list*)calloc(1, sizeof(canvas_element_list));
     pElmentList->element = pElement;
     
     canvas_element_list* pCurrentItem = pCanvas->items;
@@ -209,7 +187,7 @@ canvas_element_list* canvas_element_add(canvas* pCanvas, canvas_element* pElemen
         pElmentList->previous = pCurrentItem;
     }
     
-    return pElmentList;
+    return pElement;
 }
 
 int canvas_element_remove(canvas* pCanvas, canvas_element* pElement){
@@ -230,6 +208,7 @@ int canvas_element_remove(canvas* pCanvas, canvas_element* pElement){
                 pCanvas->items = pCurrentItem->next;
             
             free(pCurrentItem);
+            // Have to free the element itself separately
             
             return 1;
         }
@@ -255,7 +234,7 @@ canvas_element_list* canvas_elements_by_type(canvas* pCanvas, uint8_t type){
             pElements[count++] = pCurrentItem->element;
     }
     
-    canvas_element_list* pItems = malloc(sizeof(canvas_element_list) * count);
+    canvas_element_list* pItems = calloc(count, sizeof(canvas_element_list));
     
     for(int i = 0; i < count; i++){
         pItems[i].element = pElements[i];
@@ -297,6 +276,7 @@ canvas_element_list* canvas_elements_value_at_point(canvas* pCanvas, canvas_poin
     return canvas_elements_filtered(pCanvas, &filter);
 }
 
+
 char canvas_element_value(canvas_element* pElement, canvas_point* pPoint){
     if(pElement == NULL || pPoint == NULL)
         return '\0';
@@ -328,28 +308,34 @@ canvas_element_list* canvas_elements_filtered(canvas* pCanvas, canvas_element_fi
     
     while(pCurrentItem != NULL){
         pCurrentPredicate = pPredicate;
+        char match = 0;
         
         while(pCurrentPredicate != NULL){
-            if(pPredicate->predicate(pCurrentItem->element, pPredicate->state) == 0)
-                goto next_item;
+            if(pCurrentPredicate->predicate(pCurrentItem->element, pPredicate->state) == 1)
+                match = 1;
+                break;
             
             pCurrentPredicate = pCurrentPredicate->next;
         }
         
-        pResults[count++] = pCurrentItem->element;
+        if(match)
+            pResults[count++] = pCurrentItem->element;
         
-    next_item:
-        continue;
+        pCurrentItem = pCurrentItem->next;
     }
     
-    canvas_element_list* pItems = malloc(sizeof(canvas_element_list) * count);
+    canvas_element_list* pItems = NULL;
     
-    for(int i = 0; i < count; i++){
-        pItems[i].element = pResults[i];
-        
-        if(i > 0){
-            pItems[i].previous = &pItems[i - 1];
-            pItems[i-1].next = &pItems[i];
+    if(count > 0){
+        pItems = calloc(count, sizeof(canvas_element_list));
+    
+        for(int i = 0; i < count; i++){
+            pItems[i].element = pResults[i];
+            
+            if(i > 0){
+                pItems[i].previous = &pItems[i - 1];
+                pItems[i-1].next = &pItems[i];
+            }
         }
     }
     

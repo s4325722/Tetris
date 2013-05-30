@@ -24,13 +24,14 @@ void canvas_render(canvas* pCanvas);
 void canvas_render_list(canvas_element_list* pCanvasItem);
 canvas_element_list* canvas_list_first(canvas_element_list* pCanvasItems);
 canvas_element_list* canvas_list_last(canvas_element_list* pCanvasItems);
-canvas_element_list* canvas_list_next(canvas_element_list* pCanvasItems);
+canvas_element_list* canvas_list_next(canvas_element_list** pCanvasItems);
 int canvas_list_count(canvas_element_list* pElementList);
 void canvas_list_free(canvas_element_list* pCanvasItems);
 void canvas_list_elements_free(canvas_element_list* pCanvasItems);
 
 canvas_element* canvas_element_create(canvas* pCanvas, uint8_t width, uint8_t height, char value);
-canvas_element_list* canvas_element_add(canvas* pCanvas, canvas_element* pElement);
+void canvas_element_free(canvas_element* pElement);
+canvas_element* canvas_element_add(canvas* pCanvas, canvas_element* pElement);
 int canvas_element_remove(canvas* pCanvas, canvas_element* pElement);
 canvas_element_list* canvas_elements_filtered(canvas* pCanvas, canvas_element_filter* pPredicate);
 int canvas_element_filter_point(canvas_element* pElement, void* pState);
@@ -63,6 +64,7 @@ struct canvas_element {
     uint8_t width;
     uint8_t height;
     uint8_t type;
+    char visible;
     char* value;
 };
 

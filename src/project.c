@@ -43,6 +43,46 @@ void handle_game_paused();
  * main -- Main program.
  */
 int main(void) {
+	initialise_hardware();
+	//splash_screen();
+    hide_cursor();
+    clear_terminal();
+    
+    tetris_game* pGame = tetris_game_create();
+    
+    while(1){
+        tetris_game_run(pGame);
+        tetris_game_display(pGame);
+    }
+    
+//	/* Setup all our hardware peripherals and call backs. This
+//	 * will turn on interrupts.
+//	 */
+//	initialise_hardware();
+//    
+//	/* Show the splash screen message. This returns when
+//	 * message display is complete.
+//	 */
+//	splash_screen();
+//    
+//    tetris_init();
+//    //tetris_display();
+//    
+//    hide_cursor();
+//    clear_terminal();
+//	
+//	/* Play the game - forever */
+//	while(1) {
+//        //		new_game();
+//		play_game();
+//		handle_game_over();
+//	}
+}
+
+/*
+ * main -- Main program.
+ */
+int main_old(void) {
     
 	/* Setup all our hardware peripherals and call backs. This 
 	 * will turn on interrupts.
@@ -54,7 +94,7 @@ int main(void) {
 	 */
 	splash_screen();
     
-    tetris_init();
+    //tetris_init();
     //tetris_display();
     
     hide_cursor();
@@ -138,7 +178,7 @@ void play_game(void) {
 					fix_piece_to_board();
 					board_updated = 1;
 				}
-                tetris_run();
+                //tetris_run();
 				last_piece_drop_time = current_time;
 			} else {
 				/* No current piece - add one */
@@ -195,7 +235,6 @@ void play_game(void) {
 		if(board_updated) {
 			/* Update display of board since its appearance has changed. */
 			//copy_board_to_led_display();
-            tetris_display();
 			board_updated = 0;
 		}
 	}
