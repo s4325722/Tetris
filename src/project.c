@@ -23,6 +23,7 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #else
+#include <unistd.h>
 /* For non AVR build, we remove our interrupt enable */
 #define sei(arg)
 #endif
@@ -39,20 +40,26 @@ void play_game(void);
 void handle_game_over(void);
 void handle_game_paused();
 
+char input_read_char();
+
 /*
  * main -- Main program.
  */
 int main(void) {
 	initialise_hardware();
 	//splash_screen();
-    hide_cursor();
-    clear_terminal();
+    //hide_cursor();
+    //clear_terminal();
     
     tetris_game* pGame = tetris_game_create();
     
     while(1){
         tetris_game_run(pGame);
         tetris_game_display(pGame);
+        
+#ifndef AVR
+        sleep(10);
+#endif
     }
     
 //	/* Setup all our hardware peripherals and call backs. This

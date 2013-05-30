@@ -44,10 +44,12 @@ const char TETRIS_CHAR_T[][3] = {
     {'\0', '\0','\0'},
 };
 
-char TETRIS_CHAR_L[][3] = {
-    {' ' , ' ', '\0'},
-    {'\0', ' ', '\0'},
-    {'\0', ' ', '\0'},
+char TETRIS_CHAR_L[][5] = {
+    {'\0','\0','\0', '\0','\0'},
+    {'\0',' ' , ' ', '\0','\0'},
+    {'\0','\0', ' ', '\0','\0'},
+    {'\0','\0', ' ', '\0','\0'},
+    {'\0','\0','\0', '\0','\0'},
 };
 
 char TETRIS_CHAR_PLUS[][3] = {
@@ -80,7 +82,7 @@ tetris_piece* TETRIS_PIECES[6] = {
     &(tetris_piece){PIECE_TYPE_DEFAULT, 3, 3, (char*)&TETRIS_CHAR_PLUS},
     &(tetris_piece){PIECE_TYPE_DEFAULT, 3, 3, (char*)&TETRIS_CHAR_T},
     &(tetris_piece){PIECE_TYPE_DEFAULT, 3, 3, (char*)&TETRIS_CHAR_TRIPLE},
-    &(tetris_piece){PIECE_TYPE_DEFAULT, 3, 3, (char*)&TETRIS_CHAR_L},
+    &(tetris_piece){PIECE_TYPE_DEFAULT, 5, 5, (char*)&TETRIS_CHAR_L},
     &(tetris_piece){PIECE_TYPE_DEFAULT, 2, 2, (char*)&TETRIS_CHAR_SQUARE},
     &(tetris_piece){PIECE_TYPE_DEFAULT, 3, 3, (char*)&TETRIS_CHAR_DOUBLE},
 };
@@ -96,32 +98,42 @@ enum TETRIS_PIECE {
 
 int tetris_element_edge(canvas_element* pPieceElement, TETRIS_PIECE_SIDE side){
     char (*pValue)[pPieceElement->width] = (char(*)[pPieceElement->width])pPieceElement->value;
-    int edge = -1;
+    uint8_t assigned = 0;
+    int edge;
 
-    for(int y = 0; y < pPieceElement->width; y++){
+    for(int y = 0; y < pPieceElement->height; y++){
         for(int x = 0; x < pPieceElement->width; x++){
             if(pValue[y][x] != '\0'){
                 switch(side){
                     case SIDE_TOP:
-                        edge = y;
-                        goto found;
+                        if(edge > y || !assigned){
+                            edge = y;
+                            assigned = 1;
+                        }
+                        break;
                     case SIDE_LEFT:
-                        edge = x;
-                        goto found;
-                    case SIDE_RIGHT:
-                        if(x > edge)
+                        if(x < edge || !assigned){
                             edge = x;
+                            assigned = 1;
+                        }
+                        break;
+                    case SIDE_RIGHT:
+                        if(x > edge || !assigned){
+                            edge = x;
+                            assigned = 1;
+                        }
                         break;
                     case SIDE_BOTTOM:
-                        if(y > edge)
+                        if(y > edge || !assigned){
                             edge = y;
+                            assigned = 1;
+                        }
                         break;
                 }
             }
         }
     }
     
-found:
     return edge;
 }
 

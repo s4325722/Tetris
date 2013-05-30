@@ -13,6 +13,7 @@
 #include "tetris.h"
 #include "tetris_piece.h"
 #include "tetris_input.h"
+#include "tetris_sound.h"
 
 static uint32_t ticks;
 static uint32_t ticks_last_dropped;
@@ -40,6 +41,7 @@ movement_result try_move_piece(canvas_element* pPieceElement, movement_direction
 movement_result collision_test(canvas_element* pPieceElement, canvas_point* pPosition);
 int collision_test_predicate(canvas_element* pElement, void* pState);
 void merge_piece(canvas_element* pSrcElement, canvas_element* pDstElement);
+movement_result rotate_piece_(canvas_element* pPieceElement);
 
 
 tetris_game_state* tetris_state_play(tetris_game* pGame){    
@@ -47,12 +49,19 @@ tetris_game_state* tetris_state_play(tetris_game* pGame){
     char is_canvas_dirty = 0;
     char is_game_over = 0;
     
+    if(pGame->command == CMD_PAUSE)
+        return game_state[(TETRIS_STATE_TYPE)Pause];
+    
     if(pGame->current_element != NULL){
         movement_direction movement = MOVE_NONE;
             
         switch(pGame->command){
             case CMD_ROTATE:
-                
+                if(rotate_piece_(pGame->current_element) == COLLIDED_NONE){
+                    is_canvas_dirty = 1;
+                }else{
+                    tetris_sound_play(BEEP);
+                }
                 break;
             case CMD_MOVE_LEFT:
                 movement = MOVE_LEFT;
@@ -63,6 +72,11 @@ tetris_game_state* tetris_state_play(tetris_game* pGame){
             case CMD_MOVE_DOWN:
                 movement = MOVE_DOWN;
                 ticks_last_dropped = get_clock_ticks();
+                break;
+            case CMD_PLUMMET:
+                movement = MOVE_DOWN;
+                while(try_move_piece(pGame->current_element, MOVE_DOWN) == COLLIDED_NONE)
+                    continue;
                 break;
             default:
                 // If we're not doing anything else, we should be dropping the piece
@@ -79,17 +93,16 @@ tetris_game_state* tetris_state_play(tetris_game* pGame){
                     break;
                 case COLLIDED_EDGE:
                 case COLLIDED_PIECE:
-                    is_canvas_dirty = 1;
-                    // play beep sound
+                    //is_canvas_dirty = 1;
+                    tetris_sound_play(BEEP);
                     break;
                 case COLLIDED_BASE:
                     if(movement != MOVE_DOWN){
-                        // play beep sound
+                        tetris_sound_play(BEEP);
                     }else{
                         is_canvas_dirty = 1;
                         // Special case, the element is at the top of the board
                         if(pGame->current_element->position.y == 0){
-                            printf("current position %d", pGame->current_element->position.y);
                             is_game_over = 1;
                         }
                         
@@ -100,13 +113,15 @@ tetris_game_state* tetris_state_play(tetris_game* pGame){
                         canvas_element_free(pGame->current_element);
                         //free(pGame->current_element);
                         pGame->current_element = NULL;
+                        
+                        return game_state[(TETRIS_STATE_TYPE)Drop];
                     }
                     break;
             }
         }
     }else{
         int pieces_count = sizeof(TETRIS_PIECES) / sizeof(tetris_piece*);
-        int random_piece_index = ((double)rand() / (double)RAND_MAX) * (pieces_count - 1);
+        int random_piece_index = (int)(((double)rand() / (double)RAND_MAX) * (pieces_count - 1));
         //int random_piece_index = 0;
         canvas_element* pNewEelement = tetris_glyph_to_element(TETRIS_PIECES[random_piece_index]);
         pGame->current_element = canvas_element_add(pGame->canvas, pNewEelement);
@@ -135,7 +150,7 @@ movement_result try_move_piece(canvas_element* pPieceElement, movement_direction
     // Test to make sure it's not on an edge first.
     switch(direction){
         case MOVE_LEFT:
-            if(position.x - 1 + tetris_element_edge(pPieceElement, SIDE_LEFT) <= 0)
+            if(position.x - 1 + tetris_element_edge(pPieceElement, SIDE_LEFT) < 0)
                 return COLLIDED_EDGE;
             position.x--;
             break;
@@ -245,4 +260,52 @@ void merge_piece(canvas_element* pSrcElement, canvas_element* pDstElement){
                 pDstValue[y][x] = pSrcValue[i][j];
         }
     }
+}
+
+movement_result rotate_piece_(canvas_element* pPieceElement){
+    char (*pValue)[pPieceElement->width] = (char(*)[pPieceElement->width])pPieceElement->value;
+    int dimension = pPieceElement->width;
+    movement_result result = COLLIDED_NONE;
+    
+    int layer, first, last, offset, top;
+    
+    for(int i = 0; i < 4; i++){
+        for (layer = 0; layer < dimension / 2 ; layer++) {
+            first = layer;
+            last = dimension - layer - 1;
+            for (int j = first; j < last ; j++) {
+                offset = j - first;
+                top = pValue[first][j];
+                
+                pValue[first][j] = pValue[last-offset][first];
+                pValue[last-offset][first] = pValue[last][last-offset];
+                pValue[last][last-offset] = pValue[j][last];
+                pValue[j][last] = top;
+            }
+        }
+        
+        int edge_left = tetris_element_edge(pPieceElement, SIDE_LEFT);
+        int edge_right = tetris_element_edge(pPieceElement, SIDE_RIGHT);
+        int edge_top = tetris_element_edge(pPieceElement, SIDE_TOP);
+        int edge_bottom = tetris_element_edge(pPieceElement, SIDE_BOTTOM);
+        
+        if(i == 0){
+            result = collision_test(pPieceElement, &pPieceElement->position);
+            
+            if(result != COLLIDED_NONE){
+                break;
+            } else if (
+               edge_left + pPieceElement->position.x < 0 ||
+               edge_right + pPieceElement->position.x > pPieceElement->canvas->width - 1 ||
+               edge_top + pPieceElement->position.y < 0 ||
+               edge_bottom + pPieceElement->position.y > pPieceElement->canvas->height - 1
+               ){
+                result = COLLIDED_EDGE;
+            }else{
+                break;
+            }
+        }
+    }
+    
+    return result;
 }

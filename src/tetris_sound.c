@@ -7,3 +7,27 @@
 //
 
 #include <stdio.h>
+#include "tetris_sound.h"
+
+
+#ifndef AVR
+
+void tetris_sound_play(tetris_sound sound){
+    switch(sound){
+        default:
+            printf("\a");
+    }
+}
+
+#endif
+
+#ifdef AVR
+
+void tetris_sound_play(tetris_sound sound){
+    switch(sound){
+        default:
+            printf("\a");
+    }
+}
+
+#endif

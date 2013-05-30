@@ -25,6 +25,7 @@ void canvas_render_list(canvas_element_list* pCanvasItem);
 canvas_element_list* canvas_list_first(canvas_element_list* pCanvasItems);
 canvas_element_list* canvas_list_last(canvas_element_list* pCanvasItems);
 canvas_element_list* canvas_list_next(canvas_element_list** pCanvasItems);
+canvas_element_list* canvas_list_append(canvas_element_list** ppElementList, canvas_element* pElement);
 int canvas_list_count(canvas_element_list* pElementList);
 void canvas_list_free(canvas_element_list* pCanvasItems);
 void canvas_list_elements_free(canvas_element_list* pCanvasItems);
@@ -49,8 +50,8 @@ struct canvas {
 };
 
 struct canvas_point {
-    uint8_t x;
-    uint8_t y;
+    int8_t x;
+    int8_t y;
 };
 
 struct canvas_point_value {

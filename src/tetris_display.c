@@ -6,10 +6,16 @@
 //
 //
 
+#ifdef AVR
+#include <avr/io.h>
+#else
 #include <stdio.h>
-#include "tetris.h"
-#include "canvas.h"
 #include "terminalio.h"
+#endif
+
+#include "canvas.h"
+#include "tetris.h"
+
 
 #ifndef AVR
 
@@ -54,14 +60,66 @@ void tetris_game_display(tetris_game* pGame){
         move_cursor(startX, startY + i);
         
         for(int j = 0; j < width; j++){
-            if(pCanvasValue[i][j] != '\0')
+            if(pCanvasValue[i][j] != '\0'){
                 set_display_attribute(colour_for_vt100(pCanvasValue[i][j]));
             
-            printf(" ");
-            printf(" ");
-            set_display_attribute(49);
+                printf(" ");
+                printf(" ");
+                set_display_attribute(49);
+            }
         }
     }
+}
+
+#endif
+
+#ifdef AVR
+
+void avr_display_initialize(void);
+static uint8_t avr_display_initialized = 0;
+
+void tetris_game_display(tetris_game* pGame){
+    if(!avr_display_initialized)
+        avr_display_initialize();
+    
+    canvas* pCanvas = pGame->canvas;
+    char (*pCanvasValue)[pCanvas->width] = (char(*)[pCanvas->width])pCanvas->value;
+    uint8_t width = pCanvas->width;
+    uint8_t height = pCanvas->height;
+    
+    for(int y = 0; y < height; y++){
+        uint8_t row_data = 0;
+        
+        for(int x = 0; x < width; x++)
+            row_data |= ((pCanvasValue[y][x] != '\0') << x);
+        
+        /* Output our row number to port G. This assumes the other
+         * bits of port G are not being used. If they are, then
+         * this line of code needs to be changed.
+         */
+        PORTG = y;
+        
+        /* Output the correct row data to ports A and C. (Port C gets
+         * the high byte, port A gets the low byte.) We need to invert
+         * the data since we need a low output for the LED to be lit.
+         * Note - most significant bit is not displayed/used.
+         */
+        PORTA = ~(uint8_t)(row_data & 0xFF);
+        PORTC = ~(uint8_t)((row_data >> 8)& 0x7F);
+    }
+}
+
+void avr_display_initialize(void){
+    /* Set ports A and C to be outputs (except most significant
+	 * bit of port C)
+	 */
+	DDRA = 0xFF;
+	DDRC = 0x7F;
+    
+	/* Set 3 least significant bits of G to be outputs */
+	DDRG = 0x07;
+    
+    avr_display_initialized = 1;
 }
 
 #endif

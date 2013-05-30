@@ -148,6 +148,23 @@ canvas_element_list* canvas_list_next(canvas_element_list** ppCanvasItems){
     return *ppCanvasItems;
 }
 
+canvas_element_list* canvas_list_append(canvas_element_list** ppElementList, canvas_element* pElement){
+    if(ppElementList == NULL)
+        return NULL;
+    
+    if(pElement == NULL)
+        return *ppElementList;
+    
+    canvas_element_list* pLastElement = canvas_list_last(*ppElementList);
+    canvas_element_list* pNewElement = (canvas_element_list*)calloc(1, sizeof(canvas_element_list));
+    pNewElement->element = pElement;
+    pNewElement->previous = pLastElement;
+    pLastElement->next = pNewElement;
+    *ppElementList = pNewElement;
+
+    return pNewElement;
+}
+
 int canvas_list_count(canvas_element_list* pElementList){
     if(pElementList == NULL)
         return 0;

@@ -21,7 +21,7 @@
 		258ACF85174355900076F4BD /* serialio.c in Sources */ = {isa = PBXBuildFile; fileRef = 258ACF5A17434C3D0076F4BD /* serialio.c */; };
 		258ACF87174355900076F4BD /* terminalio.c in Sources */ = {isa = PBXBuildFile; fileRef = 258ACF5C17434C3D0076F4BD /* terminalio.c */; };
 		258ACF89174355900076F4BD /* timer2.c in Sources */ = {isa = PBXBuildFile; fileRef = 258ACF5E17434C3D0076F4BD /* timer2.c */; };
-		25E2478E17533C5600D1CD3C /* sprite_display.c in Sources */ = {isa = PBXBuildFile; fileRef = 25E2478D17533C5600D1CD3C /* sprite_display.c */; };
+		25E10FA51757891F0014D087 /* tetris_state_drop.c in Sources */ = {isa = PBXBuildFile; fileRef = 25E10FA41757891F0014D087 /* tetris_state_drop.c */; };
 		25E2479117536F9700D1CD3C /* canvas.c in Sources */ = {isa = PBXBuildFile; fileRef = 25E2479017536F9700D1CD3C /* canvas.c */; };
 		25E247941753906500D1CD3C /* tetris.c in Sources */ = {isa = PBXBuildFile; fileRef = 25E247931753906400D1CD3C /* tetris.c */; };
 		25E247971753AA1B00D1CD3C /* tetris_piece.c in Sources */ = {isa = PBXBuildFile; fileRef = 25E247961753AA1A00D1CD3C /* tetris_piece.c */; };
@@ -70,9 +70,8 @@
 		258ACF5E17434C3D0076F4BD /* timer2.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = timer2.c; sourceTree = "<group>"; };
 		258ACF5F17434C3D0076F4BD /* timer2.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = timer2.h; sourceTree = "<group>"; };
 		258ACF641743516D0076F4BD /* make-avr */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = "make-avr"; sourceTree = "<group>"; };
+		25E10FA41757891F0014D087 /* tetris_state_drop.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tetris_state_drop.c; sourceTree = "<group>"; };
 		25E2478C1753395700D1CD3C /* seven_seg_display.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = seven_seg_display.h; sourceTree = "<group>"; };
-		25E2478D17533C5600D1CD3C /* sprite_display.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sprite_display.c; sourceTree = "<group>"; };
-		25E2478F17533C6300D1CD3C /* sprite_display.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sprite_display.h; sourceTree = "<group>"; };
 		25E2479017536F9700D1CD3C /* canvas.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = canvas.c; sourceTree = "<group>"; };
 		25E2479217536FA200D1CD3C /* canvas.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = canvas.h; sourceTree = "<group>"; };
 		25E247931753906400D1CD3C /* tetris.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tetris.c; sourceTree = "<group>"; };
@@ -143,8 +142,6 @@
 				258ACF5F17434C3D0076F4BD /* timer2.h */,
 				25043C49174C90D2005D2025 /* seven_seg_display.c */,
 				25E2478C1753395700D1CD3C /* seven_seg_display.h */,
-				25E2478D17533C5600D1CD3C /* sprite_display.c */,
-				25E2478F17533C6300D1CD3C /* sprite_display.h */,
 				25E2479017536F9700D1CD3C /* canvas.c */,
 				25E2479217536FA200D1CD3C /* canvas.h */,
 				25E247931753906400D1CD3C /* tetris.c */,
@@ -163,6 +160,7 @@
 				25E247AF17567BCE00D1CD3C /* tetris_state_lose.c */,
 				2561ED72175746AE00C027E0 /* tetris_sound.h */,
 				2561ED73175746C200C027E0 /* tetris_sound.c */,
+				25E10FA41757891F0014D087 /* tetris_state_drop.c */,
 			);
 			path = src;
 			sourceTree = "<group>";
@@ -257,7 +255,6 @@
 				258ACF87174355900076F4BD /* terminalio.c in Sources */,
 				258ACF89174355900076F4BD /* timer2.c in Sources */,
 				25043C4A174C90D2005D2025 /* seven_seg_display.c in Sources */,
-				25E2478E17533C5600D1CD3C /* sprite_display.c in Sources */,
 				25E2479117536F9700D1CD3C /* canvas.c in Sources */,
 				25E247941753906500D1CD3C /* tetris.c in Sources */,
 				25E247971753AA1B00D1CD3C /* tetris_piece.c in Sources */,
@@ -270,6 +267,7 @@
 				25E247AE17567AF500D1CD3C /* tetris_state_level.c in Sources */,
 				25E247B017567BCF00D1CD3C /* tetris_state_lose.c in Sources */,
 				2561ED74175746C200C027E0 /* tetris_sound.c in Sources */,
+				25E10FA51757891F0014D087 /* tetris_state_drop.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

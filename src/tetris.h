@@ -35,6 +35,7 @@ typedef enum TETRIS_COMMAND {
     CMD_MOVE_LEFT = '0',
     CMD_MOVE_RIGHT = 'D',
     CMD_MOVE_DOWN = '1',
+    CMD_PLUMMET = 'E',
     CMD_PAUSE = 'a'
 } TETRIS_COMMAND;
 
@@ -61,6 +62,8 @@ typedef enum TETRIS_STATE_TYPE {
     Play = 1,
     Pause = 2,
     Lose = 3,
+    Drop = 4,
+    Level = 5,
 } TETRIS_STATE_TYPE;
 
 struct tetris_game_state {
@@ -89,7 +92,8 @@ tetris_game_state* tetris_state_play(tetris_game* pGame);
 tetris_game_state* tetris_state_level(tetris_game* pGame);
 tetris_game_state* tetris_state_lose(tetris_game* pGame);
 tetris_game_state* tetris_state_pause(tetris_game* pGame);
+tetris_game_state* tetris_state_drop(tetris_game* pGame);
 
-tetris_game_state* game_state[4];
+tetris_game_state* game_state[6];
 
 #endif

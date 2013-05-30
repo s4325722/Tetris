@@ -7,7 +7,7 @@
  */
 
 #include <stdint.h>
-#include "pieces.h";
+#include "pieces.h"
 
 /*
  * The board is 15 rows in size. Row 0 is considered to be at the bottom, 

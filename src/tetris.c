@@ -15,11 +15,13 @@
 #include "canvas.h"
 #include "tetris_input.h"
 
-tetris_game_state* game_state[4] = {
+tetris_game_state* game_state[6] = {
     &(tetris_game_state){Splash, &tetris_state_splash},
     &(tetris_game_state){Play, &tetris_state_play},
     &(tetris_game_state){Pause, &tetris_state_pause},
-    &(tetris_game_state){Lose, &tetris_state_lose}
+    &(tetris_game_state){Lose, &tetris_state_lose},
+    &(tetris_game_state){Drop, &tetris_state_drop},
+    &(tetris_game_state){Level, &tetris_state_level}
 };
 
 tetris_game* tetris_game_create(){
@@ -66,21 +68,12 @@ void tetris_game_destory(tetris_game* pGame){
 }
 
 void tetris_game_run(tetris_game* pGame){
+    static tetris_game_state* previous_state = NULL;
     pGame->command = (TETRIS_COMMAND)tetris_input_read();
-    
-    switch (pGame->command) {
-        case CMD_PAUSE:
-            if(pGame->state->type != Pause)
-                pGame->command = CMD_NONE;
-                pGame->state = game_state[(TETRIS_STATE_TYPE)Pause];
-            break;
-        default: ;
-    }
-    
     tetris_game_state* next = pGame->state->next(pGame);
-    
-    if(next != NULL)
-        pGame->state = next;
+    previous_state = pGame->state;
+    next = next == NULL ? previous_state : next;
+    pGame->state = next != NULL ? next : pGame->state;
 }
 
 

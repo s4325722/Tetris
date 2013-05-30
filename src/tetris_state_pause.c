@@ -52,7 +52,8 @@ tetris_game_state* tetris_state_pause(tetris_game* pGame){
         pPausedElement = NULL;
         
         return game_state[(TETRIS_STATE_TYPE)Play];
+        //return NULL;
     }
     
-    return NULL;
+    return game_state[(TETRIS_STATE_TYPE)Pause];
 }
