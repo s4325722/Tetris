@@ -11,16 +11,16 @@
 
 #include "canvas.h"
 
-typedef struct canvas_text canvas_text;
-
-struct canvas_text {
-    char* value;
-};
+typedef enum canvas_scroll_direction {
+    SCROLL_LEFT,
+    SCROLL_RIGHT,
+    SCROLL_UP,
+    SCROLL_DOWN
+} canvas_scroll_direction;
 
 canvas_element* canvas_create_char(char character);
 canvas_element_list* canvas_create_string(char* pString);
-
-int canvas_text_scroll(canvas_element_list* pCharacterList);
+int canvas_text_scroll(canvas_element_list* pCharacterList, canvas_scroll_direction direction);
 
 
 

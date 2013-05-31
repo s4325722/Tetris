@@ -15,11 +15,12 @@
 void tetris_game_reset(tetris_game* pGame);
 
 tetris_game_state* tetris_state_lose(tetris_game* pGame){
+    printf("You've lost...\n");
     if(pGame->command != CMD_NONE){
         tetris_game_reset(pGame);
         return game_state[(TETRIS_STATE_TYPE)Play];
     }
-    
+
     return NULL;
 }
 

@@ -6,18 +6,18 @@
 //
 //
 
+#include <stdio.h>
+
 #ifdef AVR
 #include <avr/io.h>
-#else
-#include <stdio.h>
-#include "terminalio.h"
 #endif
 
+#include "terminalio.h"
 #include "canvas.h"
 #include "tetris.h"
 
 
-#ifndef AVR
+#ifndef AV
 
 uint8_t colour_for_vt100(char value){
     //    41	Red
@@ -60,23 +60,22 @@ void tetris_game_display(tetris_game* pGame){
         move_cursor(startX, startY + i);
         
         for(int j = 0; j < width; j++){
-            if(pCanvasValue[i][j] != '\0'){
+            if(pCanvasValue[i][j] != '\0')
                 set_display_attribute(colour_for_vt100(pCanvasValue[i][j]));
             
-                printf(" ");
-                printf(" ");
-                set_display_attribute(49);
-            }
+            printf(" ");
+            printf(" ");
+            set_display_attribute(49);
         }
     }
 }
 
 #endif
 
-#ifdef AVR
+#ifdef AVRS
 
 void avr_display_initialize(void);
-static uint8_t avr_display_initialized = 0;
+volatile uint8_t avr_display_initialized = 0;
 
 void tetris_game_display(tetris_game* pGame){
     if(!avr_display_initialized)
@@ -87,17 +86,18 @@ void tetris_game_display(tetris_game* pGame){
     uint8_t width = pCanvas->width;
     uint8_t height = pCanvas->height;
     
-    for(int y = 0; y < height; y++){
-        uint8_t row_data = 0;
+    for(int x = 0; x < width; x++){
+        printf("Looping rows: %d", x);
+        uint16_t row_data = 0;
         
-        for(int x = 0; x < width; x++)
-            row_data |= ((pCanvasValue[y][x] != '\0') << x);
+        for(int y = 0; y < height; y++)
+            row_data |= (pCanvasValue[x][y] != '\0') << (height - 1 - y);
         
         /* Output our row number to port G. This assumes the other
          * bits of port G are not being used. If they are, then
          * this line of code needs to be changed.
          */
-        PORTG = y;
+        PORTG = x;
         
         /* Output the correct row data to ports A and C. (Port C gets
          * the high byte, port A gets the low byte.) We need to invert

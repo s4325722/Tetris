@@ -15,8 +15,8 @@
 #include "tetris_input.h"
 #include "tetris_sound.h"
 
-static uint32_t ticks;
-static uint32_t ticks_last_dropped;
+volatile uint32_t ticks;
+volatile uint32_t ticks_last_dropped;
 
 typedef enum movement_direction {
     MOVE_NONE,
@@ -44,13 +44,14 @@ void merge_piece(canvas_element* pSrcElement, canvas_element* pDstElement);
 movement_result rotate_piece_(canvas_element* pPieceElement);
 
 
-tetris_game_state* tetris_state_play(tetris_game* pGame){    
+tetris_game_state* tetris_state_play(tetris_game* pGame){
     ticks = get_clock_ticks();
     char is_canvas_dirty = 0;
     char is_game_over = 0;
     
-    if(pGame->command == CMD_PAUSE)
+    if(pGame->command == CMD_PAUSE){
         return game_state[(TETRIS_STATE_TYPE)Pause];
+    }
     
     if(pGame->current_element != NULL){
         movement_direction movement = MOVE_NONE;
@@ -90,6 +91,7 @@ tetris_game_state* tetris_state_play(tetris_game* pGame){
             switch(try_move_piece(pGame->current_element, movement)){
                 case COLLIDED_NONE:
                     is_canvas_dirty = 1;
+                    printf("dropped one... [%d,%d]\n", pGame->current_element->position.x, pGame->current_element->position.y);
                     break;
                 case COLLIDED_EDGE:
                 case COLLIDED_PIECE:
@@ -113,7 +115,6 @@ tetris_game_state* tetris_state_play(tetris_game* pGame){
                         canvas_element_free(pGame->current_element);
                         //free(pGame->current_element);
                         pGame->current_element = NULL;
-                        
                         return game_state[(TETRIS_STATE_TYPE)Drop];
                     }
                     break;
@@ -128,8 +129,9 @@ tetris_game_state* tetris_state_play(tetris_game* pGame){
         ticks_last_dropped = get_clock_ticks();
         is_canvas_dirty = 1;
         
-        if(collision_test(pGame->current_element, &pGame->current_element->position) != COLLIDED_NONE)
+        if(collision_test(pGame->current_element, &pGame->current_element->position) != COLLIDED_NONE){
             is_game_over = 1;
+        }
     }
     
     if(is_canvas_dirty){
@@ -137,9 +139,9 @@ tetris_game_state* tetris_state_play(tetris_game* pGame){
         pGame->updated = 1;
     }
     
-    if(is_game_over)
-        
+    if(is_game_over){
         return game_state[(TETRIS_STATE_TYPE)Lose];
+    }
     
     return NULL;
 }

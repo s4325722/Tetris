@@ -14,6 +14,8 @@
 #include "tetris_piece.h"
 #include "canvas.h"
 #include "tetris_input.h"
+#include "timer2.h"
+
 
 tetris_game_state* game_state[6] = {
     &(tetris_game_state){Splash, &tetris_state_splash},
@@ -24,7 +26,7 @@ tetris_game_state* game_state[6] = {
     &(tetris_game_state){Level, &tetris_state_level}
 };
 
-tetris_game* tetris_game_create(){
+tetris_game* tetris_game_create(void){
     tetris_game* pGame = calloc(1, sizeof(tetris_game));
     float game_speed = TETRIS_GAME_SPEED;
     
@@ -69,6 +71,7 @@ void tetris_game_destory(tetris_game* pGame){
 
 void tetris_game_run(tetris_game* pGame){
     static tetris_game_state* previous_state = NULL;
+    
     pGame->command = (TETRIS_COMMAND)tetris_input_read();
     tetris_game_state* next = pGame->state->next(pGame);
     previous_state = pGame->state;

@@ -99,7 +99,7 @@ enum TETRIS_PIECE {
 int tetris_element_edge(canvas_element* pPieceElement, TETRIS_PIECE_SIDE side){
     char (*pValue)[pPieceElement->width] = (char(*)[pPieceElement->width])pPieceElement->value;
     uint8_t assigned = 0;
-    int edge;
+    int edge = 0;
 
     for(int y = 0; y < pPieceElement->height; y++){
         for(int x = 0; x < pPieceElement->width; x++){

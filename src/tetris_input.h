@@ -9,6 +9,6 @@
 #ifndef Tetris_tetris_input_h
 #define Tetris_tetris_input_h
 
-char tetris_input_read();
+char tetris_input_read(void);
 
 #endif

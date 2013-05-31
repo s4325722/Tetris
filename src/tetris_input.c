@@ -11,7 +11,7 @@
 #include "serialio.h"
 #include "external_interrupt.h"
 
-char tetris_input_read(){
+char tetris_input_read(void){
     char input;
     
     /* Check for button pushes and/or serial input. */

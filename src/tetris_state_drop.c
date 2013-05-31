@@ -27,6 +27,7 @@ tetris_game_state* tetris_state_drop(tetris_game* pGame){
         return game_state[(TETRIS_STATE_TYPE)Pause];
     
     if(pCompletedRows == NULL){
+        printf("Clearing rows...\n");
         pCompletedRows = (canvas_element_list*)calloc(1, sizeof(canvas_element_list));
         
         for(int y = 0; y < pBaseElement->height; y++){
@@ -105,6 +106,7 @@ tetris_game_state* tetris_state_drop(tetris_game* pGame){
                 pGame->updated = 1;
             }
             
+            printf("Cleared rows.\n");
             return game_state[(TETRIS_STATE_TYPE)Level];
         }
     }

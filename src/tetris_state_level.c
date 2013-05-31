@@ -10,6 +10,6 @@
 #include "tetris.h"
 
 tetris_game_state* tetris_state_level(tetris_game* pGame){
-    printf("Level");
+    printf("Next level...\n");
     return game_state[(TETRIS_STATE_TYPE)Play];
 }

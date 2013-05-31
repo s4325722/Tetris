@@ -24,7 +24,7 @@ struct tetris_piece;
 typedef struct tetris_game_settings tetris_game_settings;
 typedef struct tetris_game_level tetris_game_level;
 
-tetris_game* tetris_game_create();
+tetris_game* tetris_game_create(void);
 void tetris_game_run(tetris_game* pGame);
 void tetris_game_display(tetris_game* pGame);
 void tetris_game_destroy(tetris_game* pGame);

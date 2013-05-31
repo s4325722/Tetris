@@ -21,6 +21,7 @@
 		258ACF85174355900076F4BD /* serialio.c in Sources */ = {isa = PBXBuildFile; fileRef = 258ACF5A17434C3D0076F4BD /* serialio.c */; };
 		258ACF87174355900076F4BD /* terminalio.c in Sources */ = {isa = PBXBuildFile; fileRef = 258ACF5C17434C3D0076F4BD /* terminalio.c */; };
 		258ACF89174355900076F4BD /* timer2.c in Sources */ = {isa = PBXBuildFile; fileRef = 258ACF5E17434C3D0076F4BD /* timer2.c */; };
+		25D584C917584A27001AD117 /* tetris_hud.c in Sources */ = {isa = PBXBuildFile; fileRef = 25D584C717584A04001AD117 /* tetris_hud.c */; };
 		25E10FA51757891F0014D087 /* tetris_state_drop.c in Sources */ = {isa = PBXBuildFile; fileRef = 25E10FA41757891F0014D087 /* tetris_state_drop.c */; };
 		25E2479117536F9700D1CD3C /* canvas.c in Sources */ = {isa = PBXBuildFile; fileRef = 25E2479017536F9700D1CD3C /* canvas.c */; };
 		25E247941753906500D1CD3C /* tetris.c in Sources */ = {isa = PBXBuildFile; fileRef = 25E247931753906400D1CD3C /* tetris.c */; };
@@ -70,6 +71,9 @@
 		258ACF5E17434C3D0076F4BD /* timer2.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = timer2.c; sourceTree = "<group>"; };
 		258ACF5F17434C3D0076F4BD /* timer2.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = timer2.h; sourceTree = "<group>"; };
 		258ACF641743516D0076F4BD /* make-avr */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = "make-avr"; sourceTree = "<group>"; };
+		25D584C717584A04001AD117 /* tetris_hud.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tetris_hud.c; sourceTree = "<group>"; };
+		25D584C817584A15001AD117 /* tetris_hud.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = tetris_hud.h; sourceTree = "<group>"; };
+		25D584CA175852A9001AD117 /* font.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = font.h; sourceTree = "<group>"; };
 		25E10FA41757891F0014D087 /* tetris_state_drop.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tetris_state_drop.c; sourceTree = "<group>"; };
 		25E2478C1753395700D1CD3C /* seven_seg_display.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = seven_seg_display.h; sourceTree = "<group>"; };
 		25E2479017536F9700D1CD3C /* canvas.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = canvas.c; sourceTree = "<group>"; };
@@ -161,6 +165,9 @@
 				2561ED72175746AE00C027E0 /* tetris_sound.h */,
 				2561ED73175746C200C027E0 /* tetris_sound.c */,
 				25E10FA41757891F0014D087 /* tetris_state_drop.c */,
+				25D584C717584A04001AD117 /* tetris_hud.c */,
+				25D584C817584A15001AD117 /* tetris_hud.h */,
+				25D584CA175852A9001AD117 /* font.h */,
 			);
 			path = src;
 			sourceTree = "<group>";
@@ -268,6 +275,7 @@
 				25E247B017567BCF00D1CD3C /* tetris_state_lose.c in Sources */,
 				2561ED74175746C200C027E0 /* tetris_sound.c in Sources */,
 				25E10FA51757891F0014D087 /* tetris_state_drop.c in Sources */,
+				25D584C917584A27001AD117 /* tetris_hud.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

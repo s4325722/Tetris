@@ -18,12 +18,15 @@ tetris_game_state* tetris_state_splash(tetris_game* pGame){
     if(!splash_screen_printed){
         printf("Splash screen");
         splash_screen_printed = 1;
+        return game_state[(TETRIS_STATE_TYPE)Play];
+        
     }
     
-    if(tetris_input_read() != 0){
+    if(pGame->command != 0){
         splash_screen_printed = 0;
         srand(get_clock_ticks());
         return game_state[(TETRIS_STATE_TYPE)Play];
+    }else{
     }
     
     return NULL;

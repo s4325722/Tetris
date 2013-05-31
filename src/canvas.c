@@ -155,6 +155,11 @@ canvas_element_list* canvas_list_append(canvas_element_list** ppElementList, can
     if(pElement == NULL)
         return *ppElementList;
     
+    if((*ppElementList)->element == NULL){
+        (*ppElementList)->element = pElement;
+        return *ppElementList;
+    }
+    
     canvas_element_list* pLastElement = canvas_list_last(*ppElementList);
     canvas_element_list* pNewElement = (canvas_element_list*)calloc(1, sizeof(canvas_element_list));
     pNewElement->element = pElement;
