@@ -9,15 +9,11 @@
 /* Begin PBXBuildFile section */
 		25043C4A174C90D2005D2025 /* seven_seg_display.c in Sources */ = {isa = PBXBuildFile; fileRef = 25043C49174C90D2005D2025 /* seven_seg_display.c */; };
 		2561ED74175746C200C027E0 /* tetris_sound.c in Sources */ = {isa = PBXBuildFile; fileRef = 2561ED73175746C200C027E0 /* tetris_sound.c */; };
-		258ACF74174355900076F4BD /* board.c in Sources */ = {isa = PBXBuildFile; fileRef = 258ACF4917434C3D0076F4BD /* board.c */; };
 		258ACF76174355900076F4BD /* external_interrupt.c in Sources */ = {isa = PBXBuildFile; fileRef = 258ACF4B17434C3D0076F4BD /* external_interrupt.c */; };
 		258ACF78174355900076F4BD /* joystick.c in Sources */ = {isa = PBXBuildFile; fileRef = 258ACF4D17434C3D0076F4BD /* joystick.c */; };
 		258ACF7A174355900076F4BD /* keypad.c in Sources */ = {isa = PBXBuildFile; fileRef = 258ACF4F17434C3D0076F4BD /* keypad.c */; };
-		258ACF7C174355900076F4BD /* led_display.c in Sources */ = {isa = PBXBuildFile; fileRef = 258ACF5117434C3D0076F4BD /* led_display.c */; };
-		258ACF7E174355900076F4BD /* pieces.c in Sources */ = {isa = PBXBuildFile; fileRef = 258ACF5317434C3D0076F4BD /* pieces.c */; };
 		258ACF80174355900076F4BD /* project.c in Sources */ = {isa = PBXBuildFile; fileRef = 258ACF5517434C3D0076F4BD /* project.c */; };
 		258ACF81174355900076F4BD /* score.c in Sources */ = {isa = PBXBuildFile; fileRef = 258ACF5617434C3D0076F4BD /* score.c */; };
-		258ACF83174355900076F4BD /* scrolling_char_display.c in Sources */ = {isa = PBXBuildFile; fileRef = 258ACF5817434C3D0076F4BD /* scrolling_char_display.c */; };
 		258ACF85174355900076F4BD /* serialio.c in Sources */ = {isa = PBXBuildFile; fileRef = 258ACF5A17434C3D0076F4BD /* serialio.c */; };
 		258ACF87174355900076F4BD /* terminalio.c in Sources */ = {isa = PBXBuildFile; fileRef = 258ACF5C17434C3D0076F4BD /* terminalio.c */; };
 		258ACF89174355900076F4BD /* timer2.c in Sources */ = {isa = PBXBuildFile; fileRef = 258ACF5E17434C3D0076F4BD /* timer2.c */; };
@@ -47,23 +43,15 @@
 		2530708E1748EC3A00188C7D /* make-moss */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; path = "make-moss"; sourceTree = "<group>"; };
 		2561ED72175746AE00C027E0 /* tetris_sound.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = tetris_sound.h; sourceTree = "<group>"; };
 		2561ED73175746C200C027E0 /* tetris_sound.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tetris_sound.c; sourceTree = "<group>"; };
-		258ACF4917434C3D0076F4BD /* board.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = board.c; sourceTree = "<group>"; };
-		258ACF4A17434C3D0076F4BD /* board.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = board.h; sourceTree = "<group>"; };
 		258ACF4B17434C3D0076F4BD /* external_interrupt.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = external_interrupt.c; sourceTree = "<group>"; };
 		258ACF4C17434C3D0076F4BD /* external_interrupt.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = external_interrupt.h; sourceTree = "<group>"; };
 		258ACF4D17434C3D0076F4BD /* joystick.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = joystick.c; sourceTree = "<group>"; };
 		258ACF4E17434C3D0076F4BD /* joystick.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = joystick.h; sourceTree = "<group>"; };
 		258ACF4F17434C3D0076F4BD /* keypad.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = keypad.c; sourceTree = "<group>"; };
 		258ACF5017434C3D0076F4BD /* keypad.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = keypad.h; sourceTree = "<group>"; };
-		258ACF5117434C3D0076F4BD /* led_display.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = led_display.c; sourceTree = "<group>"; };
-		258ACF5217434C3D0076F4BD /* led_display.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = led_display.h; sourceTree = "<group>"; };
-		258ACF5317434C3D0076F4BD /* pieces.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = pieces.c; sourceTree = "<group>"; };
-		258ACF5417434C3D0076F4BD /* pieces.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = pieces.h; sourceTree = "<group>"; };
 		258ACF5517434C3D0076F4BD /* project.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = project.c; sourceTree = "<group>"; };
 		258ACF5617434C3D0076F4BD /* score.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = score.c; sourceTree = "<group>"; };
 		258ACF5717434C3D0076F4BD /* score.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = score.h; sourceTree = "<group>"; };
-		258ACF5817434C3D0076F4BD /* scrolling_char_display.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = scrolling_char_display.c; sourceTree = "<group>"; };
-		258ACF5917434C3D0076F4BD /* scrolling_char_display.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = scrolling_char_display.h; sourceTree = "<group>"; };
 		258ACF5A17434C3D0076F4BD /* serialio.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = serialio.c; sourceTree = "<group>"; };
 		258ACF5B17434C3D0076F4BD /* serialio.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = serialio.h; sourceTree = "<group>"; };
 		258ACF5C17434C3D0076F4BD /* terminalio.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = terminalio.c; sourceTree = "<group>"; };
@@ -73,7 +61,6 @@
 		258ACF641743516D0076F4BD /* make-avr */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = "make-avr"; sourceTree = "<group>"; };
 		25D584C717584A04001AD117 /* tetris_hud.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tetris_hud.c; sourceTree = "<group>"; };
 		25D584C817584A15001AD117 /* tetris_hud.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = tetris_hud.h; sourceTree = "<group>"; };
-		25D584CA175852A9001AD117 /* font.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = font.h; sourceTree = "<group>"; };
 		25E10FA41757891F0014D087 /* tetris_state_drop.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tetris_state_drop.c; sourceTree = "<group>"; };
 		25E2478C1753395700D1CD3C /* seven_seg_display.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = seven_seg_display.h; sourceTree = "<group>"; };
 		25E2479017536F9700D1CD3C /* canvas.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = canvas.c; sourceTree = "<group>"; };
@@ -92,6 +79,7 @@
 		25E247AB17567A8B00D1CD3C /* tetris_state_pause.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tetris_state_pause.c; sourceTree = "<group>"; };
 		25E247AD17567AF500D1CD3C /* tetris_state_level.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tetris_state_level.c; sourceTree = "<group>"; };
 		25E247AF17567BCE00D1CD3C /* tetris_state_lose.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tetris_state_lose.c; sourceTree = "<group>"; };
+		25EFF466175C6971003FB53D /* font_7x4.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = font_7x4.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -121,23 +109,15 @@
 		258ACF4817434C3D0076F4BD /* src */ = {
 			isa = PBXGroup;
 			children = (
-				258ACF4917434C3D0076F4BD /* board.c */,
-				258ACF4A17434C3D0076F4BD /* board.h */,
 				258ACF4B17434C3D0076F4BD /* external_interrupt.c */,
 				258ACF4C17434C3D0076F4BD /* external_interrupt.h */,
 				258ACF4D17434C3D0076F4BD /* joystick.c */,
 				258ACF4E17434C3D0076F4BD /* joystick.h */,
 				258ACF4F17434C3D0076F4BD /* keypad.c */,
 				258ACF5017434C3D0076F4BD /* keypad.h */,
-				258ACF5117434C3D0076F4BD /* led_display.c */,
-				258ACF5217434C3D0076F4BD /* led_display.h */,
-				258ACF5317434C3D0076F4BD /* pieces.c */,
-				258ACF5417434C3D0076F4BD /* pieces.h */,
 				258ACF5517434C3D0076F4BD /* project.c */,
 				258ACF5617434C3D0076F4BD /* score.c */,
 				258ACF5717434C3D0076F4BD /* score.h */,
-				258ACF5817434C3D0076F4BD /* scrolling_char_display.c */,
-				258ACF5917434C3D0076F4BD /* scrolling_char_display.h */,
 				258ACF5A17434C3D0076F4BD /* serialio.c */,
 				258ACF5B17434C3D0076F4BD /* serialio.h */,
 				258ACF5C17434C3D0076F4BD /* terminalio.c */,
@@ -167,7 +147,7 @@
 				25E10FA41757891F0014D087 /* tetris_state_drop.c */,
 				25D584C717584A04001AD117 /* tetris_hud.c */,
 				25D584C817584A15001AD117 /* tetris_hud.h */,
-				25D584CA175852A9001AD117 /* font.h */,
+				25EFF466175C6971003FB53D /* font_7x4.h */,
 			);
 			path = src;
 			sourceTree = "<group>";
@@ -249,15 +229,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				258ACF74174355900076F4BD /* board.c in Sources */,
 				258ACF76174355900076F4BD /* external_interrupt.c in Sources */,
 				258ACF78174355900076F4BD /* joystick.c in Sources */,
 				258ACF7A174355900076F4BD /* keypad.c in Sources */,
-				258ACF7C174355900076F4BD /* led_display.c in Sources */,
-				258ACF7E174355900076F4BD /* pieces.c in Sources */,
 				258ACF80174355900076F4BD /* project.c in Sources */,
 				258ACF81174355900076F4BD /* score.c in Sources */,
-				258ACF83174355900076F4BD /* scrolling_char_display.c in Sources */,
 				258ACF85174355900076F4BD /* serialio.c in Sources */,
 				258ACF87174355900076F4BD /* terminalio.c in Sources */,
 				258ACF89174355900076F4BD /* timer2.c in Sources */,

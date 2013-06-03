@@ -14,7 +14,7 @@
 
 #define TETRIS_GAME_WIDTH 7
 #define TETRIS_GAME_HEIGHT 15
-#define TETRIS_GAME_SPEED 1000;
+#define TETRIS_GAME_SPEED 5000;
 
 struct tetris_t;
 typedef struct tetris_game tetris_game;
@@ -51,6 +51,7 @@ struct tetris_game_level {
 };
 
 struct tetris_game_settings {
+    char* ticker;
     uint8_t level_start;
     uint8_t level_end;
     uint16_t speed;
@@ -78,6 +79,7 @@ struct tetris_game {
     canvas* canvas;
     canvas_element* base_element;
     canvas_element* current_element;
+    canvas_element* next_element;
     TETRIS_COMMAND command;
     char updated;
 };

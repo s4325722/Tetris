@@ -27,7 +27,7 @@ tetris_game_state* tetris_state_drop(tetris_game* pGame){
         return game_state[(TETRIS_STATE_TYPE)Pause];
     
     if(pCompletedRows == NULL){
-        printf("Clearing rows...\n");
+        //printf("Clearing rows...\n");
         pCompletedRows = (canvas_element_list*)calloc(1, sizeof(canvas_element_list));
         
         for(int y = 0; y < pBaseElement->height; y++){
@@ -49,8 +49,8 @@ tetris_game_state* tetris_state_drop(tetris_game* pGame){
             pRowElement->visible = 1;
             pRowElement->value = pRowCopy;
             
-            if(pCompletedRows->element == NULL){
-                pCompletedRows->element = pRowElement;
+            if(pCompletedRows->current == NULL){
+                pCompletedRows->current = pRowElement;
             }else{
                 canvas_list_append(&pCompletedRows, pRowElement);
             }
@@ -61,12 +61,13 @@ tetris_game_state* tetris_state_drop(tetris_game* pGame){
             continue;
         }
         
-        if(pCompletedRows->element != NULL){
+        if(pCompletedRows->current != NULL){
             canvas_render(pGame->canvas);
             pGame->updated = 1;
             last_beat = get_clock_ticks();
             last_pulse = 0;
         }else{
+            canvas_list_elements_free(pCompletedRows);
             canvas_list_free(pCompletedRows);
             pCompletedRows = NULL;
             
@@ -82,31 +83,30 @@ tetris_game_state* tetris_state_drop(tetris_game* pGame){
         if(last_pulse < 5){
             if(pCompletedRow != NULL){
                 do{
-                    pCompletedRow->element->visible = pCompletedRow->element->visible ? 0 : 1;
+                    pCompletedRow->current->visible = pCompletedRow->current->visible ? 0 : 1;
                 }while(canvas_list_next(&pCompletedRow));
             }
             canvas_render(pGame->canvas);
             pGame->updated = 1;
             last_pulse++;            
-        }else{
-            if(pCompletedRow != NULL){
-                do{
-                    for(int y = pCompletedRow->element->position.y; y > 0; y--){
-                        memcpy(pBaseValue[y], pBaseValue[y-1], row_size);
-                    }
-                    
-                    memset(pBaseValue[0], '\0', row_size);
-                    
-                    canvas_element_remove(pGame->canvas, pCompletedRow->element);
-                }while(canvas_list_next(&pCompletedRow));
+        }else if(pCompletedRow != NULL){
+            do{
+                for(int y = pCompletedRow->current->position.y; y > 0; y--){
+                    memcpy(pBaseValue[y], pBaseValue[y-1], row_size);
+                }
                 
-                canvas_list_free(pCompletedRows);
-                pCompletedRows = NULL;
-                canvas_render(pGame->canvas);
-                pGame->updated = 1;
-            }
+                memset(pBaseValue[0], '\0', row_size);
+                
+                canvas_element_remove(pGame->canvas, pCompletedRow->current);
+            }while(canvas_list_next(&pCompletedRow));
             
-            printf("Cleared rows.\n");
+            canvas_list_elements_free(pCompletedRows);
+            canvas_list_free(pCompletedRows);
+            pCompletedRows = NULL;
+            canvas_render(pGame->canvas);
+            pGame->updated = 1;
+            
+            //printf("Cleared rows.\n");
             return game_state[(TETRIS_STATE_TYPE)Level];
         }
     }

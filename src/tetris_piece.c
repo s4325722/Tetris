@@ -138,16 +138,17 @@ int tetris_element_edge(canvas_element* pPieceElement, TETRIS_PIECE_SIDE side){
 }
 
 canvas_element* tetris_glyph_to_element(tetris_piece* pTetrisPiece){
-    int size = pTetrisPiece->width * pTetrisPiece->height * (int)sizeof(char);
-    canvas_element* pPieceElement = (canvas_element*)calloc(1, sizeof(canvas_element));
+    int size = pTetrisPiece->width * pTetrisPiece->height;
+    char* pValue = calloc(size, sizeof(char));
+    memcpy(pValue, pTetrisPiece->value, size * sizeof(char));
+    
+    canvas_element* pPieceElement = canvas_element_create(pTetrisPiece->width, pTetrisPiece->height, pValue);
     pPieceElement->width = pTetrisPiece->width;
     pPieceElement->height = pTetrisPiece->height;
     pPieceElement->type = pTetrisPiece->type;
     pPieceElement->position.x = 0;
     pPieceElement->position.y = 0;
     pPieceElement->visible = 1;
-    pPieceElement->value = malloc(size);
-    memcpy(pPieceElement->value, pTetrisPiece->value, size);
     
 #ifndef AVR
     char colourise = TETRIS_PIECE_COLOURISE;

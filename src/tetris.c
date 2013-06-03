@@ -32,6 +32,7 @@ tetris_game* tetris_game_create(void){
     
     // Set up the game settings
     pGame->settings = (tetris_game_settings){
+        "Tetris 43257221",
         1, // First level
         3, // Last level
     };
@@ -71,7 +72,7 @@ void tetris_game_destory(tetris_game* pGame){
 
 void tetris_game_run(tetris_game* pGame){
     static tetris_game_state* previous_state = NULL;
-    
+
     pGame->command = (TETRIS_COMMAND)tetris_input_read();
     tetris_game_state* next = pGame->state->next(pGame);
     previous_state = pGame->state;

@@ -42,6 +42,7 @@ movement_result collision_test(canvas_element* pPieceElement, canvas_point* pPos
 int collision_test_predicate(canvas_element* pElement, void* pState);
 void merge_piece(canvas_element* pSrcElement, canvas_element* pDstElement);
 movement_result rotate_piece_(canvas_element* pPieceElement);
+canvas_element* create_random_piece(void);
 
 
 tetris_game_state* tetris_state_play(tetris_game* pGame){
@@ -91,7 +92,7 @@ tetris_game_state* tetris_state_play(tetris_game* pGame){
             switch(try_move_piece(pGame->current_element, movement)){
                 case COLLIDED_NONE:
                     is_canvas_dirty = 1;
-                    printf("dropped one... [%d,%d]\n", pGame->current_element->position.x, pGame->current_element->position.y);
+                    //printf("dropped one... [%d,%d]\n", pGame->current_element->position.x, pGame->current_element->position.y);
                     break;
                 case COLLIDED_EDGE:
                 case COLLIDED_PIECE:
@@ -106,26 +107,32 @@ tetris_game_state* tetris_state_play(tetris_game* pGame){
                         // Special case, the element is at the top of the board
                         if(pGame->current_element->position.y == 0){
                             is_game_over = 1;
+                        }else{
+                            // Copy to base element
+                            merge_piece(pGame->current_element, pGame->base_element);
+                            // Then clean up
+                            canvas_element_remove(pGame->canvas, pGame->current_element);
+                            canvas_element_free(pGame->current_element);
+                            //free(pGame->current_element);
+                            pGame->current_element = NULL;
+                            return game_state[(TETRIS_STATE_TYPE)Drop];
                         }
-                        
-                        // Copy to base element
-                        merge_piece(pGame->current_element, pGame->base_element);
-                        // Then clean up
-                        canvas_element_remove(pGame->canvas, pGame->current_element);
-                        canvas_element_free(pGame->current_element);
-                        //free(pGame->current_element);
-                        pGame->current_element = NULL;
-                        return game_state[(TETRIS_STATE_TYPE)Drop];
                     }
                     break;
             }
         }
     }else{
-        int pieces_count = sizeof(TETRIS_PIECES) / sizeof(tetris_piece*);
-        int random_piece_index = (int)(((double)rand() / (double)RAND_MAX) * (pieces_count - 1));
-        //int random_piece_index = 0;
-        canvas_element* pNewEelement = tetris_glyph_to_element(TETRIS_PIECES[random_piece_index]);
-        pGame->current_element = canvas_element_add(pGame->canvas, pNewEelement);
+        if(pGame->next_element == NULL)
+            pGame->next_element = create_random_piece();
+        
+        pGame->current_element = canvas_element_add(pGame->canvas, pGame->next_element);
+        pGame->next_element = create_random_piece();
+        
+        int left_offset = tetris_element_edge(pGame->current_element, SIDE_LEFT);
+        int right_offset = tetris_element_edge(pGame->current_element, SIDE_RIGHT);
+        int8_t random_x_offset = (int8_t)(((double)rand() / (double)RAND_MAX) * (pGame->canvas->width - right_offset - left_offset));
+        pGame->current_element->position.x = left_offset + random_x_offset;
+        
         ticks_last_dropped = get_clock_ticks();
         is_canvas_dirty = 1;
         
@@ -140,10 +147,20 @@ tetris_game_state* tetris_state_play(tetris_game* pGame){
     }
     
     if(is_game_over){
+        canvas_element_remove(pGame->canvas, pGame->current_element);
+        canvas_element_free(pGame->current_element);
+        pGame->current_element = NULL;
+        
         return game_state[(TETRIS_STATE_TYPE)Lose];
     }
     
-    return NULL;
+    return game_state[(TETRIS_STATE_TYPE)Play];
+}
+
+canvas_element* create_random_piece(void){
+    int pieces_count = sizeof(TETRIS_PIECES) / sizeof(tetris_piece*);
+    int random_piece_index = (int)(((double)rand() / (double)RAND_MAX) * (pieces_count - 1));
+    return tetris_glyph_to_element(TETRIS_PIECES[random_piece_index]);
 }
 
 movement_result try_move_piece(canvas_element* pPieceElement, movement_direction direction){
@@ -199,7 +216,7 @@ movement_result collision_test(canvas_element* pPieceElement, canvas_point* posi
         result = COLLIDED_PIECE;
         
         do{
-            if(pCollisions->element->type == PIECE_TYPE_BASE){
+            if(pCollisions->current->type == PIECE_TYPE_BASE){
                 result = COLLIDED_BASE;
                 break;
             }

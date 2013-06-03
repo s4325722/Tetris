@@ -18,8 +18,8 @@ typedef enum canvas_scroll_direction {
     SCROLL_DOWN
 } canvas_scroll_direction;
 
-canvas_element* canvas_create_char(char character);
-canvas_element_list* canvas_create_string(char* pString);
+canvas_element_list* canvas_text_create(char* pString);
+void canvas_text_destroy(canvas_element_list* pStringElements);
 int canvas_text_scroll(canvas_element_list* pCharacterList, canvas_scroll_direction direction);
 
 

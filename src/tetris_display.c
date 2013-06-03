@@ -10,6 +10,9 @@
 
 #ifdef AVR
 #include <avr/io.h>
+#include <avr/cpufunc.h>
+#else
+#define _NOP()
 #endif
 
 #include "terminalio.h"
@@ -17,7 +20,7 @@
 #include "tetris.h"
 
 
-#ifndef AV
+#ifndef AVR
 
 uint8_t colour_for_vt100(char value){
     //    41	Red
@@ -72,40 +75,69 @@ void tetris_game_display(tetris_game* pGame){
 
 #endif
 
-#ifdef AVRS
+#ifdef AVR
 
 void avr_display_initialize(void);
-volatile uint8_t avr_display_initialized = 0;
 
 void tetris_game_display(tetris_game* pGame){
-    if(!avr_display_initialized)
+    static uint16_t avr_display_buffer[TETRIS_GAME_WIDTH];
+    static uint8_t avr_display_initialized = 0;
+    
+    if(!avr_display_initialized){
         avr_display_initialize();
+        avr_display_initialized = 1;
+    }
     
-    canvas* pCanvas = pGame->canvas;
-    char (*pCanvasValue)[pCanvas->width] = (char(*)[pCanvas->width])pCanvas->value;
-    uint8_t width = pCanvas->width;
-    uint8_t height = pCanvas->height;
+    uint8_t width = pGame->canvas->width;
+    uint8_t height = pGame->canvas->height;
     
-    for(int x = 0; x < width; x++){
-        printf("Looping rows: %d", x);
-        uint16_t row_data = 0;
+//     if(!pGame->updated){
+//        return;
+//    }else{
+//        pGame->updated = 0;
+//    }
+
+    if(pGame->updated){
+        char (*pCanvasValue)[width] = (char(*)[width])pGame->canvas->value;
         
-        for(int y = 0; y < height; y++)
-            row_data |= (pCanvasValue[x][y] != '\0') << (height - 1 - y);
+        for(int x = 0; x < width; x++){
+            uint16_t row_data = 0;
+            
+            for(int y = 0; y < height; y++)
+                row_data |= (pCanvasValue[y][x] != '\0') << (height - 1 - y);
+            
+            avr_display_buffer[x] = row_data;
+        }
         
-        /* Output our row number to port G. This assumes the other
-         * bits of port G are not being used. If they are, then
-         * this line of code needs to be changed.
-         */
-        PORTG = x;
-        
-        /* Output the correct row data to ports A and C. (Port C gets
-         * the high byte, port A gets the low byte.) We need to invert
-         * the data since we need a low output for the LED to be lit.
-         * Note - most significant bit is not displayed/used.
-         */
-        PORTA = ~(uint8_t)(row_data & 0xFF);
-        PORTC = ~(uint8_t)((row_data >> 8)& 0x7F);
+        pGame->updated = 0;
+    }
+    
+//    for(int x = 0; x < width; x++){
+//        //printf("Looping rows: %d", x);
+//        volatile uint16_t row_data = 0;
+//        
+//        for(int y = 0; y < height; y++)
+//            row_data |= (pCanvasValue[y][x] != '\0') << (height - 1 - y);
+//        
+//        /* Output our row number to port G. This assumes the other
+//         * bits of port G are not being used. If they are, then
+//         * this line of code needs to be changed.
+//         */
+//        PORTG = x;
+//        
+//        /* Output the correct row data to ports A and C. (Port C gets
+//         * the high byte, port A gets the low byte.) We need to invert
+//         * the data since we need a low output for the LED to be lit.
+//         * Note - most significant bit is not displayed/used.
+//         */
+//        PORTA = ~(uint8_t)(row_data & 0xFF);
+//        PORTC = ~(uint8_t)((row_data >> 8)& 0x7F);
+//    }
+    
+    for(int i = 0; i < width; i++){;
+        PORTG = i;
+        PORTA = ~(uint8_t)(avr_display_buffer[i] & 0xFF);
+        PORTC = ~(uint8_t)((avr_display_buffer[i] >> 8)& 0x7F);
     }
 }
 
@@ -118,8 +150,6 @@ void avr_display_initialize(void){
     
 	/* Set 3 least significant bits of G to be outputs */
 	DDRG = 0x07;
-    
-    avr_display_initialized = 1;
 }
 
 #endif

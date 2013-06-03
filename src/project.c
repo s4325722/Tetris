@@ -4,8 +4,6 @@
  * Original version by Peter Sutton. Modified by <YOUR NAME(S) HERE>
  */
 
-#include "board.h"
-#include "led_display.h"
 #include "keypad.h"
 #include "timer2.h"
 #include "score.h"
@@ -36,33 +34,36 @@ void timer_activities(void);
 void splash_screen(void);
 
 uint32_t ts = 0;
-tetris_game* pGameGlobal = NULL;
+tetris_game* pGame = NULL;
 
 /*
  * main -- Main program.
  */
 int main(void) {
+#ifndef AVR
+    sleep(5);
+#endif
 	initialise_hardware();
 	splash_screen();
     //hide_cursor();
     //clear_terminal();
     
-    tetris_game* pGame = tetris_game_create();
-    pGameGlobal = pGame;
+    pGame = tetris_game_create();
     
     (void)button_pushed();
 	(void)keypad_button_pushed();
-	//clear_serial_input_buffer();
+	clear_serial_input_buffer();
     
     while(1){
         tetris_game_run(pGame);
+        //tetris_game_display(pGame);
         
+#ifndef AVR
         if(get_clock_ticks() - ts > 1000 || pGame->updated){
             ts = get_clock_ticks();
             tetris_game_display(pGame);
         }
-
-//    fflush(stdout);
+#endif
     }
 }
 
@@ -73,6 +74,9 @@ void timer_activities(void) {
 	
 	/* Check the next column of our keypad for any button pushes. */
 	check_keypad_column();
+    
+    if(pGame != NULL)
+         tetris_game_display(pGame);
 }
 
 void initialise_hardware(void) {
@@ -84,7 +88,7 @@ void initialise_hardware(void) {
 	init_serial_stdio(19200, 0);
 
 	/* Initialise the LED board display */
-	init_led_display();
+	//init_led_display();
 	
 	/* Initialise the keypad. We don't provide a handler, we'll
 	 * rely on asking the keypad module for the last button pushed.

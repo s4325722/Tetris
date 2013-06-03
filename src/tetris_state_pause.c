@@ -24,26 +24,25 @@ tetris_game_state* tetris_state_pause(tetris_game* pGame){
         pPausedElement->position.x = 1;
         pPausedElement->position.y = 4;
 
-        if(pElementList->element != NULL){
+        if(pElementList->current != NULL){
             do{
-                pElementList->element->visible = 0;
+                pElementList->current->visible = 0;
             }while(canvas_list_next(&pElementList) != NULL);
         }
         
         canvas_element_add(pGame->canvas, pPausedElement);
-    }else{
-        if(get_clock_ticks() - last_beat > 500){
-            last_beat = get_clock_ticks();
-            pPausedElement->visible = pPausedElement->visible ? 0 : 1;
-            canvas_render(pGame->canvas);
-            pGame->updated = 1;
-        }
+        
+    }else if(get_clock_ticks() - last_beat > 500){
+        last_beat = get_clock_ticks();
+        pPausedElement->visible = pPausedElement->visible ? 0 : 1;
+        canvas_render(pGame->canvas);
+        pGame->updated = 1;
     }
 
     if(pGame->command == 'a'){
-        if(pElementList->element != NULL){
+        if(pElementList->current != NULL){
             do{
-                pElementList->element->visible = 1;
+                pElementList->current->visible = 1;
             }while(canvas_list_next(&pElementList) != NULL);
         }
         
