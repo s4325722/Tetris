@@ -46,15 +46,15 @@
  * NOTE - OUTPUT_BUFFER_SIZE can not be larger than 255 without changing
  * the type of the variables below.
  */
-#define OUTPUT_BUFFER_SIZE 255
+#define OUTPUT_BUFFER_SIZE 1024
 volatile char out_buffer[OUTPUT_BUFFER_SIZE];
-volatile uint8_t out_insert_pos;
-volatile uint8_t bytes_in_out_buffer;
+volatile int16_t out_insert_pos;
+volatile int16_t bytes_in_out_buffer;
 
 /* Circular buffer to hold incoming characters. Works on same principle
  * as output buffer
  */
-#define INPUT_BUFFER_SIZE 16
+#define INPUT_BUFFER_SIZE 255
 volatile char input_buffer[INPUT_BUFFER_SIZE];
 volatile uint8_t input_insert_pos;
 volatile uint8_t bytes_in_input_buffer;

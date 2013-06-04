@@ -10,6 +10,12 @@
 #include "tetris.h"
 
 tetris_game_state* tetris_state_level(tetris_game* pGame){
-    printf("Next level...\n");
+    
+    if(pGame->level.score / pGame->settings.level_step > pGame->level.score){
+        pGame->level.number++;
+        pGame->level.speed_multiplier += 0.1F;
+        pGame->level.score_multiplier += 0.5F;
+    }
+    
     return game_state[(TETRIS_STATE_TYPE)Play];
 }

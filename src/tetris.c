@@ -35,6 +35,9 @@ tetris_game* tetris_game_create(void){
         "Tetris 43257221",
         1, // First level
         3, // Last level
+        10,
+        0,
+        0
     };
     
     // Set up the first level

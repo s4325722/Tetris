@@ -25,6 +25,7 @@
 
 #include "tetris.h"
 #include "tetris_input.h"
+#include "tetris_hud.h"
 
 /*
  * Function prototypes - these are defined below main()
@@ -35,6 +36,7 @@ void splash_screen(void);
 
 uint32_t ts = 0;
 tetris_game* pGame = NULL;
+tetris_hud* pHud = NULL;
 
 /*
  * main -- Main program.
@@ -49,6 +51,7 @@ int main(void) {
     //clear_terminal();
     
     pGame = tetris_game_create();
+    pHud = tetris_hud_create(pGame);
     
     (void)button_pushed();
 	(void)keypad_button_pushed();
@@ -56,7 +59,9 @@ int main(void) {
     
     while(1){
         tetris_game_run(pGame);
-        //tetris_game_display(pGame);
+#ifdef AVR
+        tetris_hud_display(pHud);
+#endif
         
 #ifndef AVR
         if(get_clock_ticks() - ts > 1000 || pGame->updated){
@@ -77,6 +82,10 @@ void timer_activities(void) {
     
     if(pGame != NULL)
          tetris_game_display(pGame);
+#ifdef AVR
+    //if(pHud != NULL)
+    //    tetris_hud_display(pHud);
+#endif
 }
 
 void initialise_hardware(void) {
@@ -112,7 +121,7 @@ void initialise_hardware(void) {
 
 void splash_screen(void) {
 	//clear_terminal();
-	printf("TETRIS - CSSE2010/CSSE7201 Project\n");
+	//printf("TETRIS - CSSE2010/CSSE7201 Project\n");
 }
 
 

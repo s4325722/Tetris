@@ -175,11 +175,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "src/tetris_state_play.c"
-         timestampString = "391935973.994173"
+         timestampString = "392004303.266159"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "228"
-         endingLineNumber = "228"
+         startingLineNumber = "233"
+         endingLineNumber = "233"
          landmarkName = "collision_test_predicate()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -188,11 +188,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "src/tetris_state_play.c"
-         timestampString = "391935973.994173"
+         timestampString = "392004303.266159"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "186"
-         endingLineNumber = "186"
+         startingLineNumber = "191"
+         endingLineNumber = "191"
          landmarkName = "try_move_piece()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -201,11 +201,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "src/tetris_state_play.c"
-         timestampString = "391935973.994173"
+         timestampString = "392004303.266159"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "234"
-         endingLineNumber = "234"
+         startingLineNumber = "239"
+         endingLineNumber = "239"
          landmarkName = "collision_test_predicate()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -214,11 +214,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "src/tetris_state_play.c"
-         timestampString = "391935973.994173"
+         timestampString = "392004303.266159"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "189"
-         endingLineNumber = "189"
+         startingLineNumber = "194"
+         endingLineNumber = "194"
          landmarkName = "try_move_piece()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -227,11 +227,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "src/tetris_state_play.c"
-         timestampString = "391935973.994173"
+         timestampString = "392004303.266159"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "190"
-         endingLineNumber = "190"
+         startingLineNumber = "195"
+         endingLineNumber = "195"
          landmarkName = "try_move_piece()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -240,11 +240,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "src/tetris_state_play.c"
-         timestampString = "391935973.994173"
+         timestampString = "392004303.266159"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "212"
-         endingLineNumber = "212"
+         startingLineNumber = "217"
+         endingLineNumber = "217"
          landmarkName = "collision_test()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -253,11 +253,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "src/tetris_state_play.c"
-         timestampString = "391935973.994173"
+         timestampString = "392004303.266159"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "275"
-         endingLineNumber = "275"
+         startingLineNumber = "280"
+         endingLineNumber = "280"
          landmarkName = "merge_piece()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -266,11 +266,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "src/tetris_state_play.c"
-         timestampString = "391935973.994173"
+         timestampString = "392004303.266159"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "237"
-         endingLineNumber = "237"
+         startingLineNumber = "242"
+         endingLineNumber = "242"
          landmarkName = "collision_test_predicate()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -279,11 +279,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "src/tetris_state_play.c"
-         timestampString = "391935973.994173"
+         timestampString = "392004303.266159"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "209"
-         endingLineNumber = "209"
+         startingLineNumber = "214"
+         endingLineNumber = "214"
          landmarkName = "collision_test()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -292,11 +292,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "src/tetris_state_play.c"
-         timestampString = "391935973.994173"
+         timestampString = "392004303.266159"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "208"
-         endingLineNumber = "208"
+         startingLineNumber = "213"
+         endingLineNumber = "213"
          landmarkName = "collision_test()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -305,33 +305,7 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "src/tetris_state_play.c"
-         timestampString = "391935973.994173"
-         startingColumnNumber = "9223372036854775807"
-         endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "250"
-         endingLineNumber = "250"
-         landmarkName = "collision_test_predicate()"
-         landmarkType = "7">
-      </FileBreakpoint>
-      <FileBreakpoint
-         shouldBeEnabled = "No"
-         ignoreCount = "0"
-         continueAfterRunningActions = "No"
-         filePath = "src/tetris_state_play.c"
-         timestampString = "391935973.994173"
-         startingColumnNumber = "9223372036854775807"
-         endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "254"
-         endingLineNumber = "254"
-         landmarkName = "collision_test_predicate()"
-         landmarkType = "7">
-      </FileBreakpoint>
-      <FileBreakpoint
-         shouldBeEnabled = "No"
-         ignoreCount = "0"
-         continueAfterRunningActions = "No"
-         filePath = "src/tetris_state_play.c"
-         timestampString = "391935973.994173"
+         timestampString = "392004303.266159"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
          startingLineNumber = "255"
@@ -344,11 +318,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "src/tetris_state_play.c"
-         timestampString = "391935973.994173"
+         timestampString = "392004303.266159"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "247"
-         endingLineNumber = "247"
+         startingLineNumber = "259"
+         endingLineNumber = "259"
          landmarkName = "collision_test_predicate()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -357,11 +331,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "src/tetris_state_play.c"
-         timestampString = "391935973.994173"
+         timestampString = "392004303.266159"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "249"
-         endingLineNumber = "249"
+         startingLineNumber = "260"
+         endingLineNumber = "260"
          landmarkName = "collision_test_predicate()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -370,11 +344,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "src/tetris_state_play.c"
-         timestampString = "391935973.994173"
+         timestampString = "392004303.266159"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "231"
-         endingLineNumber = "231"
+         startingLineNumber = "252"
+         endingLineNumber = "252"
          landmarkName = "collision_test_predicate()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -383,11 +357,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "src/tetris_state_play.c"
-         timestampString = "391935973.994173"
+         timestampString = "392004303.266159"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "235"
-         endingLineNumber = "235"
+         startingLineNumber = "254"
+         endingLineNumber = "254"
          landmarkName = "collision_test_predicate()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -396,11 +370,37 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "src/tetris_state_play.c"
-         timestampString = "391935973.994173"
+         timestampString = "392004303.266159"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "210"
-         endingLineNumber = "210"
+         startingLineNumber = "236"
+         endingLineNumber = "236"
+         landmarkName = "collision_test_predicate()"
+         landmarkType = "7">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "No"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         filePath = "src/tetris_state_play.c"
+         timestampString = "392004303.266159"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "240"
+         endingLineNumber = "240"
+         landmarkName = "collision_test_predicate()"
+         landmarkType = "7">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "No"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         filePath = "src/tetris_state_play.c"
+         timestampString = "392004303.266159"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "215"
+         endingLineNumber = "215"
          landmarkName = "collision_test()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -409,11 +409,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "src/tetris_state_play.c"
-         timestampString = "391935973.994173"
+         timestampString = "392004303.266159"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "211"
-         endingLineNumber = "211"
+         startingLineNumber = "216"
+         endingLineNumber = "216"
          landmarkName = "collision_test()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -422,11 +422,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "src/tetris_state_play.c"
-         timestampString = "391935973.994173"
+         timestampString = "392004303.266159"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "152"
-         endingLineNumber = "152"
+         startingLineNumber = "157"
+         endingLineNumber = "157"
          landmarkName = "tetris_state_play()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -435,20 +435,7 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "src/tetris_state_play.c"
-         timestampString = "391935973.994173"
-         startingColumnNumber = "9223372036854775807"
-         endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "169"
-         endingLineNumber = "169"
-         landmarkName = "try_move_piece()"
-         landmarkType = "7">
-      </FileBreakpoint>
-      <FileBreakpoint
-         shouldBeEnabled = "No"
-         ignoreCount = "0"
-         continueAfterRunningActions = "No"
-         filePath = "src/tetris_state_play.c"
-         timestampString = "391935973.994173"
+         timestampString = "392004303.266159"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
          startingLineNumber = "174"
@@ -461,7 +448,7 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "src/tetris_state_play.c"
-         timestampString = "391935973.994173"
+         timestampString = "392004303.266159"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
          startingLineNumber = "179"
@@ -474,11 +461,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "src/tetris_state_play.c"
-         timestampString = "391935973.994173"
+         timestampString = "392004303.266159"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "171"
-         endingLineNumber = "171"
+         startingLineNumber = "184"
+         endingLineNumber = "184"
          landmarkName = "try_move_piece()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -487,11 +474,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "src/tetris_state_play.c"
-         timestampString = "391935973.994173"
+         timestampString = "392004303.266159"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "170"
-         endingLineNumber = "170"
+         startingLineNumber = "176"
+         endingLineNumber = "176"
          landmarkName = "try_move_piece()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -500,11 +487,24 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "src/tetris_state_play.c"
-         timestampString = "391935973.994173"
+         timestampString = "392004303.266159"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "152"
-         endingLineNumber = "152"
+         startingLineNumber = "175"
+         endingLineNumber = "175"
+         landmarkName = "try_move_piece()"
+         landmarkType = "7">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "No"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         filePath = "src/tetris_state_play.c"
+         timestampString = "392004303.266159"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "157"
+         endingLineNumber = "157"
          landmarkName = "tetris_state_play()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -513,11 +513,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "src/tetris_state_play.c"
-         timestampString = "391935973.994173"
+         timestampString = "392004303.266159"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "153"
-         endingLineNumber = "153"
+         startingLineNumber = "158"
+         endingLineNumber = "158"
          landmarkName = "tetris_state_play()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -526,11 +526,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "src/tetris_state_play.c"
-         timestampString = "391935973.994173"
+         timestampString = "392004303.266159"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "274"
-         endingLineNumber = "274"
+         startingLineNumber = "279"
+         endingLineNumber = "279"
          landmarkName = "merge_piece()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -570,19 +570,6 @@
          endingColumnNumber = "9223372036854775807"
          startingLineNumber = "33"
          endingLineNumber = "33"
-         landmarkName = "tetris_state_pause()"
-         landmarkType = "7">
-      </FileBreakpoint>
-      <FileBreakpoint
-         shouldBeEnabled = "No"
-         ignoreCount = "0"
-         continueAfterRunningActions = "No"
-         filePath = "src/tetris_state_pause.c"
-         timestampString = "391927852.814189"
-         startingColumnNumber = "9223372036854775807"
-         endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "50"
-         endingLineNumber = "50"
          landmarkName = "tetris_state_pause()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -656,11 +643,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "src/tetris_state_play.c"
-         timestampString = "391935973.994173"
+         timestampString = "392004303.266159"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "149"
-         endingLineNumber = "149"
+         startingLineNumber = "153"
+         endingLineNumber = "153"
          landmarkName = "tetris_state_play()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -695,11 +682,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "src/tetris_display.c"
-         timestampString = "391645478.370524"
+         timestampString = "392017260.294605"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "64"
-         endingLineNumber = "64"
+         startingLineNumber = "63"
+         endingLineNumber = "63"
          landmarkName = "tetris_game_display()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -721,11 +708,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "src/tetris_state_drop.c"
-         timestampString = "391672109.040676"
+         timestampString = "391989753.191722"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "73"
-         endingLineNumber = "73"
+         startingLineNumber = "74"
+         endingLineNumber = "74"
          landmarkName = "tetris_state_drop()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -734,11 +721,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "src/tetris_state_drop.c"
-         timestampString = "391672109.040676"
+         timestampString = "391989753.191722"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "110"
-         endingLineNumber = "110"
+         startingLineNumber = "114"
+         endingLineNumber = "114"
          landmarkName = "tetris_state_drop()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -799,20 +786,7 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "src/tetris_state_drop.c"
-         timestampString = "391672109.040676"
-         startingColumnNumber = "9223372036854775807"
-         endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "76"
-         endingLineNumber = "76"
-         landmarkName = "tetris_state_drop()"
-         landmarkType = "7">
-      </FileBreakpoint>
-      <FileBreakpoint
-         shouldBeEnabled = "No"
-         ignoreCount = "0"
-         continueAfterRunningActions = "No"
-         filePath = "src/tetris_state_drop.c"
-         timestampString = "391672109.040676"
+         timestampString = "391989753.191722"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
          startingLineNumber = "77"
@@ -825,11 +799,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "src/tetris_state_drop.c"
-         timestampString = "391672109.040676"
+         timestampString = "391989753.191722"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "79"
-         endingLineNumber = "79"
+         startingLineNumber = "78"
+         endingLineNumber = "78"
          landmarkName = "tetris_state_drop()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -838,11 +812,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "src/tetris_state_drop.c"
-         timestampString = "391672109.040676"
+         timestampString = "391989753.191722"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "82"
-         endingLineNumber = "82"
+         startingLineNumber = "80"
+         endingLineNumber = "80"
          landmarkName = "tetris_state_drop()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -851,11 +825,24 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "src/tetris_state_drop.c"
-         timestampString = "391672109.040676"
+         timestampString = "391989753.191722"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
          startingLineNumber = "83"
          endingLineNumber = "83"
+         landmarkName = "tetris_state_drop()"
+         landmarkType = "7">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "No"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         filePath = "src/tetris_state_drop.c"
+         timestampString = "391989753.191722"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "84"
+         endingLineNumber = "84"
          landmarkName = "tetris_state_drop()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -877,22 +864,22 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "src/project.c"
-         timestampString = "391941573.249043"
+         timestampString = "391989753.191722"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "34"
-         endingLineNumber = "34">
+         startingLineNumber = "35"
+         endingLineNumber = "35">
       </FileBreakpoint>
       <FileBreakpoint
          shouldBeEnabled = "No"
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "src/project.c"
-         timestampString = "391976448.519934"
+         timestampString = "391989753.191722"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "55"
-         endingLineNumber = "55"
+         startingLineNumber = "58"
+         endingLineNumber = "58"
          landmarkName = "main()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -972,6 +959,32 @@
          startingLineNumber = "104"
          endingLineNumber = "104"
          landmarkName = "canvas_text_scroll()"
+         landmarkType = "7">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "No"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         filePath = "src/tetris_hud.c"
+         timestampString = "392018550.954706"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "66"
+         endingLineNumber = "66"
+         landmarkName = "tetris_hud_display()"
+         landmarkType = "7">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "No"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         filePath = "src/tetris_hud.c"
+         timestampString = "392018550.954706"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "56"
+         endingLineNumber = "56"
+         landmarkName = "tetris_hud_display()"
          landmarkType = "7">
       </FileBreakpoint>
    </FileBreakpoints>

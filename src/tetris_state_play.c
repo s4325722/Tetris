@@ -127,6 +127,7 @@ tetris_game_state* tetris_state_play(tetris_game* pGame){
         
         pGame->current_element = canvas_element_add(pGame->canvas, pGame->next_element);
         pGame->next_element = create_random_piece();
+        pGame->hud_updated = 1;
         
         int left_offset = tetris_element_edge(pGame->current_element, SIDE_LEFT);
         int right_offset = tetris_element_edge(pGame->current_element, SIDE_RIGHT);

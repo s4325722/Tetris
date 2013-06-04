@@ -17,7 +17,7 @@ static canvas_element* pPausedElement;
 static uint32_t last_beat;
 
 tetris_game_state* tetris_state_pause(tetris_game* pGame){
-    canvas_element_list* pElementList = pGame->canvas->items;
+    canvas_element_list* pElementList = canvas_list_first(pGame->canvas->items);
     
     if(pPausedElement == NULL){
         pPausedElement = tetris_glyph_to_element(TETRIS_GLYPH_PAUSE);
@@ -32,14 +32,7 @@ tetris_game_state* tetris_state_pause(tetris_game* pGame){
         
         canvas_element_add(pGame->canvas, pPausedElement);
         
-    }else if(get_clock_ticks() - last_beat > 500){
-        last_beat = get_clock_ticks();
-        pPausedElement->visible = pPausedElement->visible ? 0 : 1;
-        canvas_render(pGame->canvas);
-        pGame->updated = 1;
-    }
-
-    if(pGame->command == 'a'){
+    }else if(pGame->command == 'a'){
         if(pElementList->current != NULL){
             do{
                 pElementList->current->visible = 1;
@@ -47,12 +40,17 @@ tetris_game_state* tetris_state_pause(tetris_game* pGame){
         }
         
         canvas_element_remove(pGame->canvas, pPausedElement);
-        free(pPausedElement);
+        canvas_element_free(pPausedElement);
         pPausedElement = NULL;
         
         return game_state[(TETRIS_STATE_TYPE)Play];
-        //return NULL;
+
+    }else if(get_clock_ticks() - last_beat > 500){
+        last_beat = get_clock_ticks();
+        pPausedElement->visible = pPausedElement->visible ? 0 : 1;
+        canvas_render(pGame->canvas);
+        pGame->updated = 1;
     }
-    
+
     return game_state[(TETRIS_STATE_TYPE)Pause];
 }

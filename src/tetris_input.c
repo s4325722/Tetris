@@ -10,6 +10,7 @@
 #include "keypad.h"
 #include "serialio.h"
 #include "external_interrupt.h"
+#include "terminalio.h"
 
 #ifdef AVR
 #include <avr/io.h>
@@ -39,8 +40,9 @@ char tetris_input_read(void){
          * to emulate the push buttons etc below.
          */
         input = fgetc(stdin);
-        clear_serial_input_buffer();
     }
+    
+    clear_serial_input_buffer();
     
     return input;
 }

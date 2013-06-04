@@ -14,7 +14,7 @@
 
 #define TETRIS_GAME_WIDTH 7
 #define TETRIS_GAME_HEIGHT 15
-#define TETRIS_GAME_SPEED 5000;
+#define TETRIS_GAME_SPEED 1000;
 
 struct tetris_t;
 typedef struct tetris_game tetris_game;
@@ -36,7 +36,8 @@ typedef enum TETRIS_COMMAND {
     CMD_MOVE_RIGHT = 'D',
     CMD_MOVE_DOWN = '1',
     CMD_PLUMMET = 'E',
-    CMD_PAUSE = 'a'
+    CMD_PAUSE = 'a',
+    CMD_NEW = 'F'
 } TETRIS_COMMAND;
 
 //typedef struct tetris_t {
@@ -48,12 +49,15 @@ struct tetris_game_level {
     // The speed at which pieces are dropped (in milliseconds)
     float score_multiplier;
     float speed_multiplier;
+    uint8_t score;
+    uint8_t cleared;
 };
 
 struct tetris_game_settings {
     char* ticker;
     uint8_t level_start;
     uint8_t level_end;
+    uint8_t level_step;
     uint16_t speed;
     uint32_t seed;
 };
@@ -81,7 +85,9 @@ struct tetris_game {
     canvas_element* current_element;
     canvas_element* next_element;
     TETRIS_COMMAND command;
-    char updated;
+    uint8_t updated;
+    uint8_t hud_updated;
+    
 };
 
 typedef enum tetris_element_type {

@@ -99,6 +99,27 @@ canvas_element* canvas_element_create(uint8_t width, uint8_t height, char* pValu
     return pElement;
 }
 
+canvas_element* canvas_element_copy(canvas_element* pCanvasElement){
+    int size = pCanvasElement->width * pCanvasElement->height * sizeof(char);
+    canvas_element* pElement = (canvas_element*)calloc(1, sizeof(canvas_element));
+    char* pValue = NULL;
+    
+    if(pCanvasElement->value != NULL){
+        pValue = malloc(size);
+        memcpy(pValue, pCanvasElement->value, size);
+    }
+
+    pElement->width = pCanvasElement->width;
+    pElement->height = pCanvasElement->height;
+    pElement->type = pCanvasElement->type;
+    pElement->position.x = 0;
+    pElement->position.y = 0;
+    pElement->visible = 1;
+    pElement->value = pValue;
+    
+    return pElement;
+}
+
 void canvas_element_free(canvas_element* pElement){
     if(pElement == NULL)
         return;
@@ -354,7 +375,7 @@ canvas_element_list* canvas_elements_filtered(canvas* pCanvas, canvas_element_fi
         return NULL;
 
     canvas_element_filter* pCurrentPredicate;
-    canvas_element_list* pCurrentItem = pCanvas->items;
+    canvas_element_list* pCurrentItem = canvas_list_first(pCanvas->items);
     canvas_element* pResults[canvas_items_count(pCanvas)];
     int count = 0;
     

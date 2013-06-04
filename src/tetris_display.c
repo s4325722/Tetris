@@ -39,7 +39,6 @@ void tetris_game_display(tetris_game* pGame){
     }else{
         pGame->updated = 0;
     }
-        
     
     canvas* pCanvas = pGame->canvas;
     char (*pCanvasValue)[pCanvas->width] = (char(*)[pCanvas->width])pCanvas->value;
@@ -90,12 +89,6 @@ void tetris_game_display(tetris_game* pGame){
     
     uint8_t width = pGame->canvas->width;
     uint8_t height = pGame->canvas->height;
-    
-//     if(!pGame->updated){
-//        return;
-//    }else{
-//        pGame->updated = 0;
-//    }
 
     if(pGame->updated){
         char (*pCanvasValue)[width] = (char(*)[width])pGame->canvas->value;
@@ -111,28 +104,6 @@ void tetris_game_display(tetris_game* pGame){
         
         pGame->updated = 0;
     }
-    
-//    for(int x = 0; x < width; x++){
-//        //printf("Looping rows: %d", x);
-//        volatile uint16_t row_data = 0;
-//        
-//        for(int y = 0; y < height; y++)
-//            row_data |= (pCanvasValue[y][x] != '\0') << (height - 1 - y);
-//        
-//        /* Output our row number to port G. This assumes the other
-//         * bits of port G are not being used. If they are, then
-//         * this line of code needs to be changed.
-//         */
-//        PORTG = x;
-//        
-//        /* Output the correct row data to ports A and C. (Port C gets
-//         * the high byte, port A gets the low byte.) We need to invert
-//         * the data since we need a low output for the LED to be lit.
-//         * Note - most significant bit is not displayed/used.
-//         */
-//        PORTA = ~(uint8_t)(row_data & 0xFF);
-//        PORTC = ~(uint8_t)((row_data >> 8)& 0x7F);
-//    }
     
     for(int i = 0; i < width; i++){;
         PORTG = i;

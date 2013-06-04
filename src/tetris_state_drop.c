@@ -74,7 +74,7 @@ tetris_game_state* tetris_state_drop(tetris_game* pGame){
             return game_state[(TETRIS_STATE_TYPE)Play];
         }
     }else{
-        if(get_clock_ticks() - last_beat < 75)
+        if(get_clock_ticks() - last_beat < 150)
             return NULL;
         
         last_beat = get_clock_ticks();
@@ -100,13 +100,17 @@ tetris_game_state* tetris_state_drop(tetris_game* pGame){
                 canvas_element_remove(pGame->canvas, pCompletedRow->current);
             }while(canvas_list_next(&pCompletedRow));
             
+            uint8_t rows_cleared_count = canvas_list_count(pCompletedRows);
             canvas_list_elements_free(pCompletedRows);
             canvas_list_free(pCompletedRows);
             pCompletedRows = NULL;
             canvas_render(pGame->canvas);
             pGame->updated = 1;
             
-            //printf("Cleared rows.\n");
+            
+            pGame->level.score += pGame->level.score_multiplier * rows_cleared_count;
+            pGame->level.cleared += rows_cleared_count;
+            
             return game_state[(TETRIS_STATE_TYPE)Level];
         }
     }
